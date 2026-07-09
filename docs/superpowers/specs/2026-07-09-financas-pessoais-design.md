@@ -66,8 +66,11 @@ cartão é a soma das parcelas que caem em M, calculadas a partir de
 
 ### Regra de fechamento
 
-- Compra com `data_compra` **até** o dia de fechamento do mês → 1ª parcela na
-  fatura que vence naquele mesmo ciclo (mês de vencimento correspondente).
+- Cada fatura é **identificada pelo mês do seu vencimento** (ex.: a fatura
+  `2026-08` vence no dia de vencimento de agosto/2026 e agrupa as compras do
+  ciclo encerrado no fechamento imediatamente anterior a esse vencimento).
+- Compra com `data_compra` **até** o dia de fechamento → 1ª parcela na primeira
+  fatura ainda aberta (a do próximo vencimento).
 - Compra **após** o fechamento → 1ª parcela na fatura do ciclo seguinte.
 - Parcelas seguintes caem nos meses subsequentes, uma por mês.
 - Valor da parcela = `valor_total / parcelas`, com ajuste de centavos na última
