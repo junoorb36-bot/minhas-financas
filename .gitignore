@@ -1,0 +1,15 @@
+# dependências e build
+node_modules/
+.next/
+out/
+
+# variáveis de ambiente (chaves do Supabase etc.)
+.env
+.env*.local
+
+# configurações locais do Claude Code
+.claude/settings.local.json
+
+# diversos
+.DS_Store
+*.log
