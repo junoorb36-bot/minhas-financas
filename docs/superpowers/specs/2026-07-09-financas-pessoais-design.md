@@ -36,12 +36,18 @@ múltiplos cartões, múltiplos usuários/compartilhamento.
 
 ## Arquitetura
 
-- **Frontend:** Next.js 15 (App Router) + TypeScript + React. CSS Modules
+> **Revisão 2026-07-09:** o backend mudou de Supabase para **Neon + NextAuth**
+> (o usuário atingiu o limite de projetos gratuitos do Supabase).
+
+- **Frontend:** Next.js 15 (App Router) + TypeScript + React. CSS global
   portando o visual atual (sem biblioteca de UI). PWA (manifest + ícones) para
   instalação no celular.
-- **Backend:** Supabase (plano gratuito) — Postgres + Auth (e-mail/senha).
-  O frontend fala direto com o Supabase via `@supabase/supabase-js`; não há
-  servidor de aplicação próprio.
+- **Banco:** Neon (Postgres serverless, plano gratuito), acessado via
+  `@neondatabase/serverless` dentro de **Server Actions** do Next.js.
+- **Autenticação:** NextAuth (Auth.js v5) com provider Credentials
+  (e-mail/senha, hash bcrypt em tabela `users` própria).
+- **Segurança de dados:** sem RLS; toda action resolve o usuário da sessão e
+  escopa as queries por `user_id`.
 - **Hospedagem:** Vercel (plano gratuito).
 - **Estado/cache:** TanStack Query (React Query) para fetch, cache e estados de
   carregamento/erro.
@@ -128,8 +134,8 @@ cartão é a soma das parcelas que caem em M, calculadas a partir de
 | Decisão | Escolha |
 |---|---|
 | Plataforma | PC + celular, sincronizado |
-| Sincronização | Serviço grátis com login (Vercel + Supabase) |
-| Stack | Next.js/React + TypeScript (Opção B) |
+| Sincronização | Serviço grátis com login (Vercel + Neon; era Supabase, trocado por limite de projetos) |
+| Stack | Next.js/React + TypeScript (Opção B) + NextAuth |
 | Cartão no fechamento | Fatura como saída única |
 | Cartões | 1 cartão, com data de fechamento |
 | Novas capacidades | Cartão de crédito + orçamento por categoria |

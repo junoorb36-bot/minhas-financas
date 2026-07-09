@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { deleteTransaction, insertTransaction, setTransactionPago, updateTransaction } from '@/lib/actions';
 import { CATEGORIAS } from '@/lib/categories';
 import { fmtBRL, parseValorBR } from '@/lib/money';
-import { supabase } from '@/lib/supabase';
 import { Transaction, TxType } from '@/lib/types';
 import { useMonth, useToast } from './Providers';
 
@@ -44,23 +44,26 @@ export default function TxSection({ title, type, txs, color }: {
       categoria: isEntrada ? null : cat,
       dia_vencimento: !isEntrada && dia ? Number(dia) : null,
     };
-    const res = editing
-      ? await supabase.from('transactions').update(row).eq('id', editing.id)
-      : await supabase.from('transactions').insert(row);
-    if (res.error) { toast('Erro ao salvar — tente novamente'); return; }
+    try {
+      if (editing) await updateTransaction(editing.id, row);
+      else await insertTransaction(row);
+    } catch {
+      toast('Erro ao salvar — tente novamente');
+      return;
+    }
     reset();
     qc.invalidateQueries();
     toast(editing ? 'Lançamento atualizado' : 'Lançamento adicionado');
   }
 
   async function toggle(t: Transaction) {
-    await supabase.from('transactions').update({ pago: !t.pago }).eq('id', t.id);
+    await setTransactionPago(t.id, !t.pago);
     qc.invalidateQueries();
   }
 
   async function remove(t: Transaction) {
     if (!confirm(`Excluir "${t.descricao}"?`)) return;
-    await supabase.from('transactions').delete().eq('id', t.id);
+    await deleteTransaction(t.id);
     if (editing?.id === t.id) reset();
     qc.invalidateQueries();
   }

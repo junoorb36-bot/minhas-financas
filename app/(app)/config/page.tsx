@@ -1,14 +1,11 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { signOut } from 'next-auth/react';
 import PageHead from '@/components/PageHead';
 import { useToast } from '@/components/Providers';
-import { q } from '@/hooks/useFinance';
-import { supabase } from '@/lib/supabase';
+import { exportAll, importLegacy } from '@/lib/actions';
 import { todayKey } from '@/lib/months';
-
-interface LegacyItem { desc: string; valor: number; recebido?: boolean; pago?: boolean; cat?: string; dia?: number | null; }
-interface LegacyMonth { meta?: number; entradas?: LegacyItem[]; fixos?: LegacyItem[]; variaveis?: LegacyItem[]; }
 
 export default function Config() {
   const qc = useQueryClient();
@@ -17,18 +14,8 @@ export default function Config() {
   const [importando, setImportando] = useState(false);
 
   async function exportar() {
-    const [months, transactions, cards, purchases, payments, budgets] = await Promise.all([
-      q(supabase.from('months').select('*')),
-      q(supabase.from('transactions').select('*')),
-      q(supabase.from('cards').select('*')),
-      q(supabase.from('card_purchases').select('*')),
-      q(supabase.from('card_invoice_payments').select('*')),
-      q(supabase.from('budgets').select('*')),
-    ]);
-    const blob = new Blob(
-      [JSON.stringify({ versao: 2, months, transactions, cards, purchases, payments, budgets }, null, 2)],
-      { type: 'application/json' },
-    );
+    const data = await exportAll();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `financas-backup-${todayKey()}.json`;
@@ -41,7 +28,7 @@ export default function Config() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    let data: { months?: Record<string, LegacyMonth> };
+    let data: { months?: Record<string, never> };
     try {
       data = JSON.parse(await file.text());
     } catch {
@@ -53,25 +40,10 @@ export default function Config() {
 
     setImportando(true);
     try {
-      const existentes = new Set((await q<{ month: string }[]>(supabase.from('months').select('month'))).map(r => r.month));
-      let nMeses = 0, nTx = 0;
-      for (const [key, m] of Object.entries(data.months)) {
-        if (existentes.has(key)) continue;
-        const ins = await supabase.from('months').insert({ month: key, meta: m.meta || 0 });
-        if (ins.error) throw new Error(ins.error.message);
-        const rows = [
-          ...(m.entradas ?? []).map(i => ({ month: key, type: 'entrada', descricao: i.desc, valor: i.valor, pago: !!i.recebido })),
-          ...(m.fixos ?? []).map(i => ({ month: key, type: 'fixo', descricao: i.desc, valor: i.valor, categoria: i.cat || 'Outros', dia_vencimento: i.dia || null, pago: !!i.pago })),
-          ...(m.variaveis ?? []).map(i => ({ month: key, type: 'variavel', descricao: i.desc, valor: i.valor, categoria: i.cat || 'Outros', dia_vencimento: i.dia || null, pago: !!i.pago })),
-        ];
-        if (rows.length) {
-          const insTx = await supabase.from('transactions').insert(rows);
-          if (insTx.error) throw new Error(insTx.error.message);
-        }
-        nMeses++; nTx += rows.length;
-      }
+      const r = await importLegacy(data);
+      if (!r.ok) { toast(r.erro ?? 'Erro durante a importação'); return; }
       qc.invalidateQueries();
-      toast(`Importado: ${nMeses} mês(es), ${nTx} lançamento(s)`);
+      toast(`Importado: ${r.nMeses} mês(es), ${r.nTx} lançamento(s)`);
     } catch {
       toast('Erro durante a importação — verifique e tente de novo');
     } finally {
@@ -100,7 +72,7 @@ export default function Config() {
       <div className="card" style={{ maxWidth: 560 }}>
         <h3 style={{ marginBottom: 4 }}>Conta</h3>
         <div className="card-sub" style={{ marginBottom: 14 }}>Sair desta conta neste aparelho.</div>
-        <button className="btn-ghost" onClick={() => supabase.auth.signOut()}>Sair</button>
+        <button className="btn-ghost" onClick={() => signOut({ callbackUrl: '/login' })}>Sair</button>
       </div>
     </>
   );

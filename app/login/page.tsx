@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { signIn } from 'next-auth/react';
+import { register } from '@/lib/actions';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,11 +14,17 @@ export default function Login() {
     e.preventDefault();
     setErro('');
     setEnviando(true);
-    const { error } = modo === 'entrar'
-      ? await supabase.auth.signInWithPassword({ email, password: senha })
-      : await supabase.auth.signUp({ email, password: senha });
-    setEnviando(false);
-    if (error) setErro(modo === 'entrar' ? 'E-mail ou senha incorretos' : error.message);
+    try {
+      if (modo === 'cadastrar') {
+        const r = await register(email, senha);
+        if (!r.ok) { setErro(r.erro ?? 'Erro ao criar a conta'); return; }
+      }
+      const res = await signIn('credentials', { email, password: senha, redirect: false });
+      if (res?.error) setErro('E-mail ou senha incorretos');
+      else window.location.href = '/';
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (

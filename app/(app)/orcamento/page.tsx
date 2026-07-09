@@ -3,11 +3,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import PageHead from '@/components/PageHead';
 import { useMonth, useToast } from '@/components/Providers';
 import { useBudgets, useCard, usePurchases, useTransactions } from '@/hooks/useFinance';
+import { setBudget } from '@/lib/actions';
 import { CATEGORIAS } from '@/lib/categories';
 import { faturaDoMes } from '@/lib/invoice';
 import { fmtBRL, parseValorBR } from '@/lib/money';
 import { gastosPorCategoria } from '@/lib/totals';
-import { supabase } from '@/lib/supabase';
 
 export default function Orcamento() {
   const { month } = useMonth();
@@ -29,14 +29,14 @@ export default function Orcamento() {
   async function setLimite(categoria: string, value: string) {
     const v = parseValorBR(value);
     const existing = budgets.find(b => b.categoria === categoria);
-    if (!value.trim() || isNaN(v) || v <= 0) {
-      if (existing) { await supabase.from('budgets').delete().eq('id', existing.id); qc.invalidateQueries(); }
+    const novoLimite = !value.trim() || isNaN(v) || v <= 0 ? null : v;
+    if (novoLimite === null && !existing) return;
+    try {
+      await setBudget(month, categoria, novoLimite);
+    } catch {
+      toast('Erro ao salvar o limite');
       return;
     }
-    const res = existing
-      ? await supabase.from('budgets').update({ limite: v }).eq('id', existing.id)
-      : await supabase.from('budgets').insert({ month, categoria, limite: v });
-    if (res.error) { toast('Erro ao salvar o limite'); return; }
     qc.invalidateQueries();
   }
 

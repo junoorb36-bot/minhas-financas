@@ -5,15 +5,14 @@ import { useMonth, useToast } from '@/components/Providers';
 import PageHead from '@/components/PageHead';
 import EvolutionChart from '@/components/EvolutionChart';
 import {
-  q, useAllMonths, useAllTransactions, useBudgets, useCard,
+  useAllMonths, useAllTransactions, useBudgets, useCard,
   useMonthRow, usePaidInvoices, usePurchases, useTransactions,
 } from '@/hooks/useFinance';
+import { iniciarMes as iniciarMesAction, setMeta as setMetaAction } from '@/lib/actions';
 import { faturaDoMes } from '@/lib/invoice';
 import { fmtBRL, parseValorBR } from '@/lib/money';
 import { monthName } from '@/lib/months';
 import { gastosPorCategoria, monthTotals } from '@/lib/totals';
-import { supabase } from '@/lib/supabase';
-import { Transaction } from '@/lib/types';
 
 function greeting() {
   const h = new Date().getHours();
@@ -46,25 +45,13 @@ export default function Home() {
   const meta = Number(monthRow.data?.meta ?? 0);
 
   async function iniciarMes() {
-    const anteriores = (allMonths.data ?? []).filter(m => m.month < month);
-    const prev = anteriores.length ? anteriores[anteriores.length - 1] : null;
-    const ins = await supabase.from('months').insert({ month, meta: prev ? Number(prev.meta) : 0 });
-    if (ins.error) { toast('Erro ao iniciar o mês'); return; }
-    let copiados = 0;
-    if (prev) {
-      const fixos = await q<Transaction[]>(supabase.from('transactions').select('*').eq('month', prev.month).eq('type', 'fixo'));
-      if (fixos.length) {
-        await supabase.from('transactions').insert(fixos.map(f => ({
-          month, type: 'fixo', descricao: f.descricao, valor: f.valor,
-          categoria: f.categoria, dia_vencimento: f.dia_vencimento,
-        })));
-        copiados = fixos.length;
-      }
-      const buds = await q<{ categoria: string; limite: number }[]>(supabase.from('budgets').select('categoria, limite').eq('month', prev.month));
-      if (buds.length) await supabase.from('budgets').insert(buds.map(b => ({ month, categoria: b.categoria, limite: b.limite })));
+    try {
+      const { copiados } = await iniciarMesAction(month);
+      qc.invalidateQueries();
+      if (copiados) toast(`${copiados} custos fixos copiados do mês anterior`);
+    } catch {
+      toast('Erro ao iniciar o mês');
     }
-    qc.invalidateQueries();
-    if (copiados) toast(`${copiados} custos fixos copiados do mês anterior`);
   }
 
   if (!monthRow.data) {
@@ -81,7 +68,7 @@ export default function Home() {
 
   async function setMeta(value: string) {
     const v = parseValorBR(value);
-    await supabase.from('months').update({ meta: isNaN(v) || v < 0 ? 0 : v }).eq('id', monthRow.data!.id);
+    await setMetaAction(month, isNaN(v) || v < 0 ? 0 : v);
     qc.invalidateQueries();
   }
 

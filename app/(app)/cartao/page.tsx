@@ -4,11 +4,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import PageHead from '@/components/PageHead';
 import { useMonth, useToast } from '@/components/Providers';
 import { useCard, usePaidInvoices, usePurchases } from '@/hooks/useFinance';
+import { deletePurchase, insertCard, insertPurchase, setInvoicePaid } from '@/lib/actions';
 import { CATEGORIAS } from '@/lib/categories';
 import { faturaDoMes, limiteUtilizado } from '@/lib/invoice';
 import { fmtBRL, parseValorBR } from '@/lib/money';
 import { monthName, todayKey } from '@/lib/months';
-import { supabase } from '@/lib/supabase';
 
 export default function Cartao() {
   const { month } = useMonth();
@@ -41,8 +41,12 @@ export default function Cartao() {
     if (!nome.trim()) { toast('Digite o nome do cartão'); return; }
     if (!f || f < 1 || f > 28 || !v || v < 1 || v > 28) { toast('Fechamento e vencimento devem ser dias entre 1 e 28'); return; }
     if (limite && (isNaN(lim!) || lim! <= 0)) { toast('Limite inválido'); return; }
-    const res = await supabase.from('cards').insert({ nome: nome.trim(), dia_fechamento: f, dia_vencimento: v, limite: lim });
-    if (res.error) { toast('Erro ao salvar o cartão'); return; }
+    try {
+      await insertCard({ nome: nome.trim(), dia_fechamento: f, dia_vencimento: v, limite: lim });
+    } catch {
+      toast('Erro ao salvar o cartão');
+      return;
+    }
     qc.invalidateQueries();
     toast('Cartão configurado');
   }
@@ -82,10 +86,12 @@ export default function Cartao() {
     if (isNaN(v) || v <= 0) { toast('Valor inválido — use por ex. 150,00'); return; }
     if (!n || n < 1 || n > 48) { toast('Número de parcelas inválido'); return; }
     if (!data) { toast('Escolha a data da compra'); return; }
-    const res = await supabase.from('card_purchases').insert({
-      card_id: card!.id, descricao: desc.trim(), valor_total: v, parcelas: n, data_compra: data, categoria: cat,
-    });
-    if (res.error) { toast('Erro ao salvar a compra'); return; }
+    try {
+      await insertPurchase({ card_id: card!.id, descricao: desc.trim(), valor_total: v, parcelas: n, data_compra: data, categoria: cat });
+    } catch {
+      toast('Erro ao salvar a compra');
+      return;
+    }
     setDesc(''); setValor(''); setParcelas('1');
     qc.invalidateQueries();
     toast('Compra adicionada');
@@ -93,16 +99,16 @@ export default function Cartao() {
 
   async function removeCompra(id: string, descricao: string) {
     if (!confirm(`Excluir a compra "${descricao}" e todas as suas parcelas?`)) return;
-    await supabase.from('card_purchases').delete().eq('id', id);
+    await deletePurchase(id);
     qc.invalidateQueries();
   }
 
   async function togglePagamento() {
-    if (faturaPaga) {
-      await supabase.from('card_invoice_payments').delete().eq('card_id', card!.id).eq('month', month);
-    } else {
-      const res = await supabase.from('card_invoice_payments').insert({ card_id: card!.id, month, pago: true });
-      if (res.error) { toast('Erro ao registrar o pagamento'); return; }
+    try {
+      await setInvoicePaid(card!.id, month, !faturaPaga);
+    } catch {
+      toast('Erro ao registrar o pagamento');
+      return;
     }
     qc.invalidateQueries();
   }

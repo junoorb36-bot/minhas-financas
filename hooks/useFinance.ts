@@ -1,35 +1,30 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Budget, Card, CardPurchase, MonthRow, Transaction } from '@/lib/types';
-
-/** Desembrulha respostas do supabase-js, lançando em caso de erro. */
-export async function q<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
-  const { data, error } = await p;
-  if (error) throw new Error(error.message);
-  return data as T;
-}
+import {
+  getCard, getMonthRow, listAllTransactions, listBudgets,
+  listInvoicePayments, listMonths, listPurchases, listTransactions,
+} from '@/lib/actions';
 
 export const useMonthRow = (month: string) =>
-  useQuery({ queryKey: ['month', month], queryFn: () => q<MonthRow | null>(supabase.from('months').select('*').eq('month', month).maybeSingle()) });
+  useQuery({ queryKey: ['month', month], queryFn: () => getMonthRow(month) });
 
 export const useAllMonths = () =>
-  useQuery({ queryKey: ['months'], queryFn: () => q<MonthRow[]>(supabase.from('months').select('*').order('month')) });
+  useQuery({ queryKey: ['months'], queryFn: () => listMonths() });
 
 export const useTransactions = (month: string) =>
-  useQuery({ queryKey: ['tx', month], queryFn: () => q<Transaction[]>(supabase.from('transactions').select('*').eq('month', month).order('created_at')) });
+  useQuery({ queryKey: ['tx', month], queryFn: () => listTransactions(month) });
 
 export const useAllTransactions = () =>
-  useQuery({ queryKey: ['tx-all'], queryFn: () => q<Transaction[]>(supabase.from('transactions').select('*')) });
+  useQuery({ queryKey: ['tx-all'], queryFn: () => listAllTransactions() });
 
 export const useCard = () =>
-  useQuery({ queryKey: ['card'], queryFn: () => q<Card | null>(supabase.from('cards').select('*').maybeSingle()) });
+  useQuery({ queryKey: ['card'], queryFn: () => getCard() });
 
 export const usePurchases = () =>
-  useQuery({ queryKey: ['purchases'], queryFn: () => q<CardPurchase[]>(supabase.from('card_purchases').select('*').order('data_compra', { ascending: false })) });
+  useQuery({ queryKey: ['purchases'], queryFn: () => listPurchases() });
 
 export const usePaidInvoices = () =>
-  useQuery({ queryKey: ['invoice-payments'], queryFn: () => q<{ month: string; pago: boolean }[]>(supabase.from('card_invoice_payments').select('month, pago')) });
+  useQuery({ queryKey: ['invoice-payments'], queryFn: () => listInvoicePayments() });
 
 export const useBudgets = (month: string) =>
-  useQuery({ queryKey: ['budgets', month], queryFn: () => q<Budget[]>(supabase.from('budgets').select('*').eq('month', month)) });
+  useQuery({ queryKey: ['budgets', month], queryFn: () => listBudgets(month) });
