@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
 import { sql } from '@/lib/db';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -8,16 +7,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: '/login' },
   providers: [
     Credentials({
-      credentials: { email: {}, password: {} },
+      credentials: { login: {} },
+      // Login único, sem senha: se o login ainda não existe, a conta é criada.
+      // O login funciona como a chave de acesso — deve ser tratado como segredo.
       async authorize(credentials) {
-        const email = String(credentials?.email ?? '').trim().toLowerCase();
-        const password = String(credentials?.password ?? '');
-        if (!email || !password) return null;
-        const rows = await sql`select id, email, password_hash from users where email = ${email}`;
-        const user = rows[0];
-        if (!user) return null;
-        const ok = await bcrypt.compare(password, user.password_hash as string);
-        return ok ? { id: user.id as string, email: user.email as string } : null;
+        const login = String(credentials?.login ?? '').trim().toLowerCase();
+        if (login.length < 3 || login.length > 40 || !/^[a-z0-9._-]+$/.test(login)) return null;
+        const rows = await sql`select id, login from users where login = ${login}`;
+        if (rows[0]) return { id: rows[0].id as string, name: rows[0].login as string };
+        const created = await sql`insert into users (login) values (${login}) returning id, login`;
+        return { id: created[0].id as string, name: created[0].login as string };
       },
     }),
   ],

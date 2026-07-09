@@ -1,5 +1,4 @@
 'use server';
-import bcrypt from 'bcryptjs';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { Budget, Card, CardPurchase, MonthRow, Transaction, TxType } from '@/lib/types';
@@ -11,25 +10,6 @@ async function userId(): Promise<string> {
   const id = session?.user?.id;
   if (!id) throw new Error('Não autenticado');
   return id;
-}
-
-/* ── conta ── */
-
-export async function register(email: string, senha: string): Promise<{ ok: boolean; erro?: string }> {
-  const e = email.trim().toLowerCase();
-  if (!/.+@.+\..+/.test(e)) return { ok: false, erro: 'E-mail inválido' };
-  if (senha.length < 6) return { ok: false, erro: 'A senha precisa de pelo menos 6 caracteres' };
-  const hash = await bcrypt.hash(senha, 10);
-  try {
-    await sql`insert into users (email, password_hash) values (${e}, ${hash})`;
-    return { ok: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : '';
-    if (msg.includes('duplicate') || msg.includes('users_email_key')) {
-      return { ok: false, erro: 'Este e-mail já tem uma conta' };
-    }
-    return { ok: false, erro: 'Erro ao criar a conta — tente novamente' };
-  }
 }
 
 /* ── leitura ── */

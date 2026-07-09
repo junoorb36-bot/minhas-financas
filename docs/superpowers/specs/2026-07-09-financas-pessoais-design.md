@@ -44,8 +44,11 @@ múltiplos cartões, múltiplos usuários/compartilhamento.
   instalação no celular.
 - **Banco:** Neon (Postgres serverless, plano gratuito), acessado via
   `@neondatabase/serverless` dentro de **Server Actions** do Next.js.
-- **Autenticação:** NextAuth (Auth.js v5) com provider Credentials
-  (e-mail/senha, hash bcrypt em tabela `users` própria).
+- **Autenticação:** NextAuth (Auth.js v5) com provider Credentials e **login
+  único sem senha** (decisão do usuário em 2026-07-09): o usuário digita apenas
+  um identificador (ex.: `junioredit`); na primeira vez a conta é criada
+  automaticamente. O login funciona como chave de acesso e deve ser tratado
+  como segredo — trade-off de segurança aceito pelo usuário.
 - **Segurança de dados:** sem RLS; toda action resolve o usuário da sessão e
   escopa as queries por `user_id`.
 - **Hospedagem:** Vercel (plano gratuito).
