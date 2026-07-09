@@ -13,3 +13,5 @@ out/
 # diversos
 .DS_Store
 *.log
+
+tsconfig.tsbuildinfo
