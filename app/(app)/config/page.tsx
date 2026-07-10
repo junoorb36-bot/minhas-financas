@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { signOut } from 'next-auth/react';
 import PageHead from '@/components/PageHead';
@@ -12,6 +12,23 @@ export default function Config() {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [importando, setImportando] = useState(false);
+  const [tema, setTema] = useState<'auto' | 'light' | 'dark'>('auto');
+
+  useEffect(() => {
+    const t = localStorage.getItem('tema');
+    if (t === 'light' || t === 'dark') setTema(t);
+  }, []);
+
+  function aplicarTema(t: 'auto' | 'light' | 'dark') {
+    setTema(t);
+    if (t === 'auto') {
+      localStorage.removeItem('tema');
+      delete document.documentElement.dataset.theme;
+    } else {
+      localStorage.setItem('tema', t);
+      document.documentElement.dataset.theme = t;
+    }
+  }
 
   async function exportar() {
     const data = await exportAll();
@@ -53,7 +70,25 @@ export default function Config() {
 
   return (
     <>
-      <PageHead title="Ajustes" sub="Backup, importação e conta." withMonthNav={false} />
+      <PageHead title="Ajustes" sub="Aparência, backup, importação e conta." withMonthNav={false} />
+      <div className="card" style={{ maxWidth: 560, marginBottom: 16 }}>
+        <h3 style={{ marginBottom: 4 }}>Aparência</h3>
+        <div className="card-sub" style={{ marginBottom: 14 }}>
+          No automático, o app segue o tema do seu aparelho.
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {([['light', 'Claro'], ['dark', 'Escuro'], ['auto', 'Automático']] as const).map(([valor, rotulo]) => (
+            <button
+              key={valor}
+              className="btn-ghost"
+              onClick={() => aplicarTema(valor)}
+              style={tema === valor ? { borderColor: 'var(--green)', background: 'var(--green-soft)', color: 'var(--green-dark)', fontWeight: 600 } : undefined}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="card" style={{ maxWidth: 560, marginBottom: 16 }}>
         <h3 style={{ marginBottom: 4 }}>Backup</h3>
         <div className="card-sub" style={{ marginBottom: 14 }}>Baixe uma cópia de todos os seus dados em JSON.</div>

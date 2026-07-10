@@ -29,7 +29,7 @@ export default function EvolutionChart({ data }: { data: EvoPoint[] }) {
           <g key={d.key}>
             <rect x={cx - barW - 2} y={base - hE} width={barW} height={Math.max(hE, 1)} rx={5} fill="var(--green)" opacity={0.9} />
             <rect x={cx + 2} y={base - hS} width={barW} height={Math.max(hS, 1)} rx={5} fill="var(--ink)" opacity={0.85} />
-            <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="#6d7772">{shortMonth(d.key)}</text>
+            <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="var(--text-subtle)">{shortMonth(d.key)}</text>
           </g>
         );
       })}
