@@ -69,7 +69,12 @@ body {
 .sidebar .backup-actions button:hover { background: var(--card-hover); color: var(--text); }
 
 /* ── Conteúdo principal ── */
-.main { margin-left: var(--sidebar-w); padding: 36px 40px 80px; }
+/* conteúdo limitado a ~1320px e centralizado na área ao lado da sidebar */
+.main {
+  max-width: calc(1320px + var(--sidebar-w) + 80px);
+  margin: 0 auto;
+  padding: 36px 40px 80px calc(var(--sidebar-w) + 40px);
+}
 
 .page-head {
   display: flex; align-items: center; justify-content: space-between;

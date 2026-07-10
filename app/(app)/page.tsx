@@ -162,6 +162,36 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="card pending-card" style={{ marginBottom: 20 }}>
+        <h3>Fixos vs Variáveis</h3>
+        <div className="card-sub">
+          {t.saidas === 0
+            ? 'composição das saídas do mês'
+            : t.fixos === t.variaveis
+              ? 'fixos e variáveis empatados neste mês'
+              : `seu maior gasto do mês é com custos ${t.fixos > t.variaveis ? 'fixos' : 'variáveis'}`}
+        </div>
+        {t.saidas === 0 ? (
+          <div className="empty-row" style={{ padding: '8px 0' }}>Sem saídas neste mês.</div>
+        ) : (
+          ([
+            ['Gastos fixos', t.fixos, 'var(--green)'],
+            ['Gastos variáveis', t.variaveis, 'var(--ink)'],
+            ...(t.fatura > 0 ? [['Fatura do cartão', t.fatura, 'var(--amber)'] as [string, number, string]] : []),
+          ] as [string, number, string][]).map(([nome, valor, cor]) => (
+            <div className="cat-row" key={nome}>
+              <span className="cat-name" style={{ width: 140 }}>{nome}</span>
+              <div className="cat-bar-wrap" style={{ height: 12 }}>
+                <div className="cat-bar" style={{ width: `${(valor / Math.max(1, t.fixos, t.variaveis, t.fatura)) * 100}%`, background: cor }} />
+              </div>
+              <span className="cat-val" style={{ width: 160 }}>
+                {fmtBRL(valor)} ({Math.round((valor / t.saidas) * 100)}%)
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+
       <div className="card pending-card">
         <h3>Contas pendentes do mês</h3>
         <div className="card-sub">ordenadas pelo dia de vencimento</div>
