@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { matchCategoria, parseMensagem } from '@/lib/telegram';
+import { dataBrasil, matchCategoria, parseMensagem } from '@/lib/telegram';
+
+describe('dataBrasil', () => {
+  it('converte para o fuso de São Paulo', () => {
+    // 15/07/2026 12:00 UTC = 09:00 em SP
+    expect(dataBrasil(Date.UTC(2026, 6, 15, 12, 0) / 1000)).toEqual({ dia: 15, month: '2026-07' });
+  });
+  it('não vira o dia antes da meia-noite de SP', () => {
+    // 10/07/2026 01:00 UTC = 09/07 22:00 em SP
+    expect(dataBrasil(Date.UTC(2026, 6, 10, 1, 0) / 1000)).toEqual({ dia: 9, month: '2026-07' });
+  });
+  it('não vira o mês na virada UTC', () => {
+    // 01/08/2026 02:00 UTC = 31/07 23:00 em SP
+    expect(dataBrasil(Date.UTC(2026, 7, 1, 2, 0) / 1000)).toEqual({ dia: 31, month: '2026-07' });
+  });
+});
 
 describe('parseMensagem', () => {
   it('gasto simples sem categoria', () => {

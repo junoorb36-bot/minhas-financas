@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { parseMensagem } from '@/lib/telegram';
+import { dataBrasil, parseMensagem } from '@/lib/telegram';
 import { fmtBRL } from '@/lib/money';
-import { monthName, todayKey } from '@/lib/months';
+import { monthName } from '@/lib/months';
 
 const AJUDA = [
   'Me envie um gasto assim:',
@@ -60,7 +60,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
     const uid = users[0].id as string;
-    const month = todayKey();
+    // usa a data de envio da mensagem (fuso de São Paulo) como mês e dia do lançamento
+    const { dia, month } = dataBrasil(msg.date ?? Date.now() / 1000);
     await sql`insert into months (user_id, month) values (${uid}, ${month})
       on conflict (user_id, month) do nothing`;
 
@@ -69,9 +70,9 @@ export async function POST(req: NextRequest) {
         values (${uid}, ${month}, 'entrada', ${p.descricao}, ${p.valor}, true)`;
       await reply(chatId, `✅ Entrada: ${p.descricao} — ${fmtBRL(p.valor)}\n📅 ${monthName(month)}`);
     } else {
-      await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, pago)
-        values (${uid}, ${month}, 'variavel', ${p.descricao}, ${p.valor}, ${p.categoria}, true)`;
-      await reply(chatId, `✅ Gasto: ${p.descricao} — ${fmtBRL(p.valor)} · ${p.categoria}\n📅 ${monthName(month)}`);
+      await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, dia_vencimento, pago)
+        values (${uid}, ${month}, 'variavel', ${p.descricao}, ${p.valor}, ${p.categoria}, ${dia}, true)`;
+      await reply(chatId, `✅ Gasto: ${p.descricao} — ${fmtBRL(p.valor)} · ${p.categoria} · dia ${dia}\n📅 ${monthName(month)}`);
     }
   } catch {
     await reply(chatId, 'Erro ao salvar 😕 Tente novamente em instantes.');

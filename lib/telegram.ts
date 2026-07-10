@@ -1,5 +1,14 @@
 import { CATEGORIAS } from './categories';
 
+/** Converte um timestamp Unix (segundos) para dia e mês no fuso de São Paulo. */
+export function dataBrasil(unixSeconds: number): { dia: number; month: string } {
+  const s = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(unixSeconds * 1000)); // ex.: '2026-07-09'
+  const [y, m, d] = s.split('-');
+  return { dia: Number(d), month: `${y}-${m}` };
+}
+
 export interface ParsedMsg {
   tipo: 'gasto' | 'entrada';
   descricao: string;
