@@ -13,7 +13,8 @@ export interface ParsedMsg {
   tipo: 'gasto' | 'entrada';
   descricao: string;
   valor: number;
-  categoria: string; // relevante apenas para gasto
+  /** null = usuário não informou (o bot deve perguntar com botões) */
+  categoria: string | null;
 }
 
 /** Aceita 45 | 45,90 | 1.234,56 | 45.90 | R$45,90. Retorna null se não for valor. */
@@ -77,6 +78,6 @@ export function parseMensagem(text: string): ParsedMsg | null {
     resto = tokens.slice(idx + 1).join(' ');
   }
   if (!descricao) return null;
-  const categoria = resto ? (matchCategoria(resto) ?? 'Outros') : 'Outros';
+  const categoria = resto ? matchCategoria(resto) : null;
   return { tipo, descricao, valor, categoria };
 }

@@ -67,6 +67,18 @@ create table budgets (
   unique (user_id, month, categoria)
 );
 
+-- gastos enviados pelo Telegram aguardando escolha de categoria (botões)
+create table telegram_pending (
+  id uuid primary key default gen_random_uuid(),
+  chat_id bigint not null,
+  tipo text not null check (tipo in ('gasto', 'entrada')),
+  descricao text not null,
+  valor numeric not null check (valor > 0),
+  dia int not null,
+  month text not null,
+  created_at timestamptz not null default now()
+);
+
 create index idx_transactions_user_month on transactions (user_id, month);
 create index idx_budgets_user_month on budgets (user_id, month);
 create index idx_purchases_user on card_purchases (user_id);

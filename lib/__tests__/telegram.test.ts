@@ -17,12 +17,12 @@ describe('dataBrasil', () => {
 });
 
 describe('parseMensagem', () => {
-  it('gasto simples sem categoria', () => {
+  it('gasto sem categoria fica com categoria null (bot pergunta)', () => {
     expect(parseMensagem('mercado 45,90')).toEqual({
-      tipo: 'gasto', descricao: 'mercado', valor: 45.9, categoria: 'Outros',
+      tipo: 'gasto', descricao: 'mercado', valor: 45.9, categoria: null,
     });
   });
-  it('gasto com categoria', () => {
+  it('gasto com categoria registra direto', () => {
     expect(parseMensagem('uber 23,50 transporte')).toEqual({
       tipo: 'gasto', descricao: 'uber', valor: 23.5, categoria: 'Transporte',
     });
@@ -30,12 +30,12 @@ describe('parseMensagem', () => {
   it('categoria sem acento é reconhecida', () => {
     expect(parseMensagem('padaria 8 alimentacao')!.categoria).toBe('Alimentação');
   });
-  it('categoria desconhecida cai em Outros', () => {
-    expect(parseMensagem('x 10 naoexiste')!.categoria).toBe('Outros');
+  it('categoria desconhecida vira null (bot pergunta)', () => {
+    expect(parseMensagem('x 10 naoexiste')!.categoria).toBeNull();
   });
   it('descrição com várias palavras e números', () => {
     expect(parseMensagem('uber 2 viagens 30')).toEqual({
-      tipo: 'gasto', descricao: 'uber 2 viagens', valor: 30, categoria: 'Outros',
+      tipo: 'gasto', descricao: 'uber 2 viagens', valor: 30, categoria: null,
     });
   });
   it('aceita ponto decimal e prefixo R$', () => {
@@ -47,10 +47,10 @@ describe('parseMensagem', () => {
   });
   it('entrada com prefixo +, nas duas ordens', () => {
     expect(parseMensagem('+2000 freela')).toEqual({
-      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: 'Outros',
+      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: null,
     });
     expect(parseMensagem('+freela 2000')).toEqual({
-      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: 'Outros',
+      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: null,
     });
   });
   it('rejeita mensagens sem valor ou sem descrição', () => {
