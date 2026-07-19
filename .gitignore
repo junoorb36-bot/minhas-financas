@@ -20,3 +20,6 @@ tsconfig.tsbuildinfo
 .vercel
 .env*
 !.env.example
+
+# projetos paralelos na mesma pasta (não fazem parte do app)
+n8n/

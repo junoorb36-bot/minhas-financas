@@ -55,13 +55,13 @@ Convenções: colunas do banco em `snake_case` e valores monetários em `numeric
 **Files:**
 - Create: `package.json`, `tsconfig.json`, `next.config.ts`, `vitest.config.ts`
 - Create: `app/layout.tsx`, `app/page.tsx`, `app/globals.css`
-- Create: `legacy/index.html` (cópia de `C:\Users\junhao\Downloads\index.html`)
+- Create: `legacy/index.html` (cópia de `<caminho do index.html original>`)
 
 - [ ] **Step 1: Copiar o app antigo para o repositório**
 
 ```powershell
 New-Item -ItemType Directory -Force D:\FINANCE\legacy
-Copy-Item "C:\Users\junhao\Downloads\index.html" D:\FINANCE\legacy\index.html
+Copy-Item "<caminho do index.html original>" D:\FINANCE\legacy\index.html
 ```
 
 - [ ] **Step 2: Criar `package.json`**

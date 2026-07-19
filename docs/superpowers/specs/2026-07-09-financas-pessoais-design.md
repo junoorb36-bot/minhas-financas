@@ -5,7 +5,7 @@
 
 ## Contexto
 
-O usuário (Heberton) possui hoje um app de finanças pessoais em um único arquivo
+O usuário possui hoje um app de finanças pessoais em um único arquivo
 `index.html` (JS puro, localStorage), com controle mensal de entradas, custos fixos,
 custos variáveis, meta de economia, status pago/pendente, gráficos SVG e
 backup/importação em JSON. O objetivo é evoluí-lo para um sistema completo,
