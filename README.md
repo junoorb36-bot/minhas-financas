@@ -30,6 +30,9 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
 
 ## 🚀 Instalação (~10 minutos, tudo grátis)
 
+> 🧑‍🏫 **Nunca programou?** Siga o **[guia para iniciantes](INSTALACAO.md)** —
+> o Claude Code instala tudo para você, sem usar terminal.
+
 ### 1. Crie o banco de dados (Neon)
 
 1. Crie uma conta em [neon.tech](https://neon.tech) e um projeto novo
