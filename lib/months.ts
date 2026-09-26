@@ -10,6 +10,11 @@ export function shiftMonth(key: string, delta: number): string {
   return y + '-' + String(m).padStart(2, '0');
 }
 
+export function diasNoMes(key: string): number {
+  const [y, m] = key.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
 export function monthName(key: string): string {
   const [y, m] = key.split('-').map(Number);
   const s = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });

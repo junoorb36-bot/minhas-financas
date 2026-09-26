@@ -180,7 +180,7 @@ body {
 
 /* ── Gráficos ── */
 .charts {
-  display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
 }
 .chart-card h3, .pending-card h3 {
   font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px;
@@ -375,6 +375,36 @@ a.nav-item { text-decoration: none; }
 .budget-row .b-bar div.warn { background: var(--amber); }
 .budget-row .b-spent { width: 170px; text-align: right; font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
+/* saídas por dia (calendário) */
+.cal-total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.cal-total strong { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.cal-total span { font-size: 12px; color: var(--text-muted); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal-head { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: var(--text-subtle); text-align: center; padding-bottom: 2px; }
+.cal-cell {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 6px;
+  min-height: 54px; padding: 6px 7px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; background: var(--bg); color: var(--text);
+  font-family: inherit; text-align: left; cursor: pointer; transition: filter 0.15s;
+}
+.cal-cell:hover:not(:disabled) { filter: brightness(0.95); }
+.cal-cell:disabled { cursor: default; color: var(--text-subtle); opacity: 1; }
+.cal-cell .d { font-size: 11px; color: var(--text-muted); }
+.cal-cell .v { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cal-cell:disabled .v { font-weight: 400; }
+.cal-cell.today { border-color: var(--green); }
+.cal-cell.sel { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+.cal-detail { margin-top: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; }
+.cal-detail-head { display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.cal-detail-head strong::first-letter { text-transform: uppercase; }
+.cal-detail-row { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 0; border-top: 1px solid var(--border); }
+.cal-detail-row span:first-child { flex: 1; }
+.cal-detail-row .num { font-weight: 500; font-variant-numeric: tabular-nums; }
+.cal-foot { display: flex; align-items: flex-end; gap: 26px; flex-wrap: wrap; border-top: 1px solid var(--border); margin-top: 16px; padding-top: 12px; }
+.cal-foot .k { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+.cal-foot .n { font-size: 14px; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.cal-hint { margin-left: auto; font-size: 11px; color: var(--text-subtle); }
+
 /* cartão */
 .card-info { display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); margin-top: 8px; }
 .card-info strong { color: var(--text); font-variant-numeric: tabular-nums; }
@@ -382,4 +412,9 @@ a.nav-item { text-decoration: none; }
 @media (max-width: 800px) {
   .budget-row { flex-wrap: wrap; }
   .budget-row .b-spent { width: 100%; text-align: left; }
+  .cal-grid { gap: 4px; }
+  .cal-cell { min-height: 46px; padding: 4px; gap: 2px; }
+  .cal-cell .d, .cal-cell .v { font-size: 9px; }
+  .cal-cell .rs { display: none; }
+  .cal-hint { margin-left: 0; width: 100%; }
 }

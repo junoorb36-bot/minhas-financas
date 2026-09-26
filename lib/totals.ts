@@ -15,6 +15,21 @@ export function monthTotals(txs: Transaction[], faturaTotal: number): MonthTotal
   return { entradas, fixos, variaveis, fatura: faturaTotal, saidas, saldo: entradas - saidas };
 }
 
+/** Soma dos resultados (entradas − saídas) de todos os meses até `ate`, inclusive. */
+export function saldoAcumulado(
+  meses: string[],
+  txs: Transaction[],
+  faturaDoMes: (month: string) => number,
+  ate: string,
+): number {
+  let total = 0;
+  for (const m of meses) {
+    if (m > ate) continue;
+    total += monthTotals(txs.filter(t => t.month === m), faturaDoMes(m)).saldo;
+  }
+  return Math.round(total * 100) / 100;
+}
+
 /** Gastos (fixos + variáveis + parcelas do cartão) somados por categoria. */
 export function gastosPorCategoria(txs: Transaction[], invoiceItems: InvoiceItem[]): Record<string, number> {
   const map: Record<string, number> = {};
