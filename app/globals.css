@@ -375,18 +375,27 @@ a.nav-item { text-decoration: none; }
 .budget-row .b-bar div.warn { background: var(--amber); }
 .budget-row .b-spent { width: 170px; text-align: right; font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
-/* observações do mês */
-.month-note { margin-bottom: 20px; }
-.month-note.empty { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-subtle); padding: 0 4px; }
-.month-note.card { padding: 16px 22px; border-left: 4px solid var(--amber); }
-.month-note-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.month-note-head h3 { font-size: 14px; font-weight: 600; }
-.month-note p { font-size: 14px; line-height: 1.5; color: var(--text); white-space: pre-wrap; }
+/* observações do mês (dentro de Gastos por categoria) */
+.cat-card { display: flex; flex-direction: column; }
+.month-note { flex: 1; display: flex; flex-direction: column; min-height: 130px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+.month-note-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.month-note-head h4 { font-size: 13px; font-weight: 600; }
+.month-note-body {
+  flex: 1; font-size: 14px; line-height: 1.55; color: var(--text); white-space: pre-wrap; cursor: text;
+  background: var(--amber-soft); border-left: 3px solid var(--amber); border-radius: var(--radius-sm); padding: 12px 14px;
+}
+.month-note-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: none; border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 14px;
+  color: var(--green); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: border-color 0.15s;
+}
+.month-note-empty span { color: var(--text-subtle); font-size: 12px; font-weight: 400; }
+.month-note-empty:hover { border-color: var(--green); }
 .month-note textarea {
-  width: 100%; resize: vertical; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  flex: 1; width: 100%; min-height: 100px; resize: vertical; background: var(--bg); border: 1px solid var(--green); color: var(--text);
   border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: inherit; line-height: 1.5;
 }
-.month-note textarea:focus { outline: none; border-color: var(--green); }
+.month-note textarea:focus { outline: none; }
 
 /* saídas por dia (calendário) */
 .cal-total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }

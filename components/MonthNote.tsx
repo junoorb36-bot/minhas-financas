@@ -23,20 +23,11 @@ export default function MonthNote({ month, nota }: { month: string; nota: string
     }
   }
 
-  if (!editando && !nota) {
-    return (
-      <div className="month-note empty">
-        <button className="hint-link" onClick={() => setEditando(true)}>+ adicionar observação</button>
-        <span>sobre {monthName(month).toLowerCase()} (ex.: viagem, gasto extra, mês atípico)</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="month-note card">
+    <div className="month-note">
       <div className="month-note-head">
-        <h3>📝 Observações de {monthName(month).toLowerCase()}</h3>
-        {!editando && <button className="hint-link" onClick={() => setEditando(true)}>editar</button>}
+        <h4>📝 Observações do mês</h4>
+        {!editando && nota && <button className="hint-link" onClick={() => setEditando(true)}>editar</button>}
       </div>
       {editando ? (
         <textarea
@@ -45,11 +36,15 @@ export default function MonthNote({ month, nota }: { month: string; nota: string
           onChange={e => setTexto(e.target.value)}
           onBlur={salvar}
           maxLength={2000}
-          rows={3}
           placeholder="O que aconteceu neste mês? Ex.: mês de viagem — muitos gastos com Uber."
         />
+      ) : nota ? (
+        <p className="month-note-body" onClick={() => setEditando(true)} title="Clique para editar">{nota}</p>
       ) : (
-        <p>{nota}</p>
+        <button className="month-note-empty" onClick={() => setEditando(true)}>
+          + Adicionar observação sobre {monthName(month).toLowerCase()}
+          <span>ex.: viagem, gasto extra, uma categoria acima do normal</span>
+        </button>
       )}
     </div>
   );

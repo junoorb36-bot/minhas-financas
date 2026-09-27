@@ -135,13 +135,11 @@ export default function Home() {
         </div>
       </div>
 
-      <MonthNote key={month} month={month} nota={monthRow.data.nota} />
-
       <div className="charts">
         <div className="card chart-card">
           <DailySpendCalendar key={month} resumo={diario} month={month} />
         </div>
-        <div className="card chart-card">
+        <div className="card chart-card cat-card">
           <h3>Gastos por categoria</h3>
           <div className="card-sub">lançamentos + parcelas do cartão</div>
           {cats.length === 0 && <div className="empty-row">Cadastre gastos para ver a divisão por categoria.</div>}
@@ -159,6 +157,7 @@ export default function Home() {
               <span className="cat-val" style={{ width: 'auto' }}>{fmtBRL(totalGasto)} de {fmtBRL(totalOrcado)}</span>
             </div>
           )}
+          <MonthNote key={month} month={month} nota={monthRow.data.nota} />
         </div>
       </div>
 
