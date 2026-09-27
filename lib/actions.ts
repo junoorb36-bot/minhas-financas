@@ -17,14 +17,14 @@ async function userId(): Promise<string> {
 
 export async function getMonthRow(month: string): Promise<MonthRow | null> {
   const uid = await userId();
-  const rows = await sql`select id, month, meta::float as meta from months
+  const rows = await sql`select id, month, meta::float as meta, nota from months
     where user_id = ${uid} and month = ${month}`;
   return (rows[0] as MonthRow | undefined) ?? null;
 }
 
 export async function listMonths(): Promise<MonthRow[]> {
   const uid = await userId();
-  return await sql`select id, month, meta::float as meta from months
+  return await sql`select id, month, meta::float as meta, nota from months
     where user_id = ${uid} order by month` as MonthRow[];
 }
 
@@ -71,6 +71,12 @@ export async function iniciarMes(month: string): Promise<{ copiados: number }> {
   const uid = await userId();
   const { copiados } = await iniciarMesParaUsuario(uid, month);
   return { copiados };
+}
+
+export async function setNota(month: string, nota: string): Promise<void> {
+  const uid = await userId();
+  const texto = nota.trim().slice(0, 2000) || null;
+  await sql`update months set nota = ${texto} where user_id = ${uid} and month = ${month}`;
 }
 
 export async function setMeta(month: string, meta: number): Promise<void> {
@@ -160,7 +166,7 @@ export async function setBudget(month: string, categoria: string, limite: number
 export async function exportAll(): Promise<Record<string, unknown>> {
   const uid = await userId();
   const [months, transactions, cards, purchases, payments, budgets] = await Promise.all([
-    sql`select month, meta::float as meta from months where user_id = ${uid} order by month`,
+    sql`select month, meta::float as meta, nota from months where user_id = ${uid} order by month`,
     sql`select month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago from transactions where user_id = ${uid}`,
     sql`select nome, dia_fechamento, dia_vencimento, limite::float as limite from cards where user_id = ${uid}`,
     sql`select descricao, valor_total::float as valor_total, parcelas, data_compra::text as data_compra, categoria from card_purchases where user_id = ${uid}`,

@@ -6,6 +6,7 @@ import PageHead from '@/components/PageHead';
 import EvolutionChart from '@/components/EvolutionChart';
 import DailySpendCalendar from '@/components/DailySpendCalendar';
 import Donut from '@/components/Donut';
+import MonthNote from '@/components/MonthNote';
 import {
   useAllMonths, useAllTransactions, useBudgets, useCard,
   useMonthRow, usePaidInvoices, usePurchases, useTransactions,
@@ -96,10 +97,10 @@ export default function Home() {
   const cats = Object.entries(gastos).sort((a, b) => b[1] - a[1]);
   const maxCat = cats.length ? cats[0][1] : 1;
 
-  const evoKeys = (allMonths.data ?? []).map(m => m.month).filter(k => k <= month).slice(-12);
-  const evo = evoKeys.map(k => {
-    const tt = monthTotals((allTxs.data ?? []).filter(x => x.month === k), faturaDe(k));
-    return { key: k, entradas: tt.entradas, saidas: tt.saidas, saldo: tt.saldo };
+  const evoMeses = (allMonths.data ?? []).filter(m => m.month <= month).slice(-12);
+  const evo = evoMeses.map(m => {
+    const tt = monthTotals((allTxs.data ?? []).filter(x => x.month === m.month), faturaDe(m.month));
+    return { key: m.month, entradas: tt.entradas, saidas: tt.saidas, saldo: tt.saldo, nota: m.nota };
   });
 
   const totalOrcado = (budgetsQ.data ?? []).reduce((s, b) => s + Number(b.limite), 0);
@@ -134,6 +135,8 @@ export default function Home() {
         </div>
       </div>
 
+      <MonthNote key={month} month={month} nota={monthRow.data.nota} />
+
       <div className="charts">
         <div className="card chart-card">
           <DailySpendCalendar key={month} resumo={diario} month={month} />
@@ -162,7 +165,7 @@ export default function Home() {
       <div className="charts">
         <div className="card chart-card">
           <h3>Evolução mês a mês</h3>
-          <div className="card-sub">entradas, saídas e saldo dos últimos meses</div>
+          <div className="card-sub">entradas, saídas e saldo dos últimos meses · ✎ = mês com observação</div>
           <EvolutionChart data={evo} />
           <div className="legend">
             <span><i className="dot" style={{ background: 'var(--green)' }} />Entradas</span>

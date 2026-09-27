@@ -1,11 +1,11 @@
 import { shortMonth } from '@/lib/months';
 
-export interface EvoPoint { key: string; entradas: number; saidas: number; saldo: number; }
+export interface EvoPoint { key: string; entradas: number; saidas: number; saldo: number; nota?: string | null; }
 
 export default function EvolutionChart({ data }: { data: EvoPoint[] }) {
   if (!data.length) return <div className="empty-row">Sem dados ainda.</div>;
 
-  const W = 560, H = 210, padL = 8, padR = 8, padT = 14, padB = 26;
+  const W = 560, H = 230, padL = 8, padR = 8, padT = 14, padB = 46;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const maxVal = Math.max(1, ...data.map(d => Math.max(d.entradas, d.saidas, Math.abs(d.saldo))));
   const slot = innerW / data.length;
@@ -29,7 +29,12 @@ export default function EvolutionChart({ data }: { data: EvoPoint[] }) {
           <g key={d.key}>
             <rect x={cx - barW - 2} y={base - hE} width={barW} height={Math.max(hE, 1)} rx={5} fill="var(--green)" opacity={0.9} />
             <rect x={cx + 2} y={base - hS} width={barW} height={Math.max(hS, 1)} rx={5} fill="var(--ink)" opacity={0.85} />
-            <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="var(--text-subtle)">{shortMonth(d.key)}</text>
+            <text x={cx} y={base + 24} textAnchor="middle" fontSize={11} fill="var(--text-subtle)">{shortMonth(d.key)}</text>
+            {d.nota && (
+              <text x={cx} y={base + 40} textAnchor="middle" fontSize={12} fill="var(--amber)" style={{ cursor: 'help' }}>
+                ✎<title>{d.nota}</title>
+              </text>
+            )}
           </g>
         );
       })}

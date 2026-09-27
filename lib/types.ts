@@ -15,6 +15,7 @@ export interface MonthRow {
   id: string;
   month: string;
   meta: number;
+  nota: string | null;
 }
 
 export interface Card {

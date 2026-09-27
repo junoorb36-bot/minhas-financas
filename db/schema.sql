@@ -11,6 +11,7 @@ create table months (
   user_id uuid not null references users(id) on delete cascade,
   month text not null,
   meta numeric not null default 0,
+  nota text,
   created_at timestamptz not null default now(),
   unique (user_id, month)
 );

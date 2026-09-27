@@ -20,6 +20,8 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
   gasto é registrado na hora — se você não informar a categoria, ele pergunta
   com botões
 - **PWA**: instale na tela inicial do celular como um app
+- **Observações do mês**: anote o que aconteceu (viagem, gasto extra) — aparece na
+  Visão geral e como ✎ no gráfico de evolução
 - **Modo escuro**: claro, escuro ou automático
 - Vários usuários por instalação (cada login tem seus próprios dados)
 
@@ -112,6 +114,12 @@ mês novo é criado copiando custos fixos, orçamento e meta — e, se o Telegra
 estiver configurado, o bot avisa.
 
 ---
+
+## 🔄 Atualizando uma instalação antiga
+
+Ao puxar uma versão nova, rode no SQL Editor do Neon os arquivos de
+[`db/migrations/`](db/migrations) que ainda não aplicou (são seguros para rodar mais
+de uma vez). Depois faça o *Redeploy* na Vercel.
 
 ## 💻 Desenvolvimento local
 

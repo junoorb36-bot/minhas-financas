@@ -51,6 +51,8 @@ pessoal dele. Roteiro que funciona:
 
 ## Trabalhando no código
 
+- **Mudanças no banco**: atualize `db/schema.sql` (instalações novas) E crie um
+  arquivo idempotente em `db/migrations/` (instalações existentes).
 - Testes: `npm test` (Vitest — lógica pura em `lib/__tests__`). Typecheck:
   `npm run typecheck`. Sempre rode ambos antes de deploy.
 - Lógica de negócio pura vive em `lib/` (fatura/parcelas em `lib/invoice.ts`,
