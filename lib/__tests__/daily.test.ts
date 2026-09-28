@@ -6,7 +6,10 @@ import { saldoAcumulado } from '@/lib/totals';
 import { Transaction } from '@/lib/types';
 
 function tx(p: Partial<Transaction>): Transaction {
-  return { id: 'x', month: '2026-09', type: 'variavel', descricao: 'T', valor: 100, categoria: 'Outros', dia_vencimento: 1, pago: false, ...p };
+  return {
+    id: 'x', month: '2026-09', type: 'variavel', descricao: 'T', valor: 100, categoria: 'Outros',
+    dia_vencimento: 1, pago: false, cartao: false, parcela: null, parcelas: null, grupo: null, ...p,
+  };
 }
 
 describe('diasNoMes', () => {
@@ -61,10 +64,9 @@ describe('saidasPorDia', () => {
     const r = saidasPorDia([tx({ dia_vencimento: 31, valor: 20 })], '2026-09');
     expect(r.dias[29].total).toBe(20);
   });
-  it('fatura do cartão entra no dia de vencimento do cartão', () => {
-    const r = saidasPorDia([], '2026-09', { nome: 'Nubank', total: 300, dia: 27 });
-    expect(r.dias[26].itens).toEqual([{ descricao: 'Fatura Nubank', valor: 300, tipo: 'Cartão' }]);
-    expect(r.total).toBe(300);
+  it('compras do cartão entram no dia da compra, marcadas, com a parcela na descrição', () => {
+    const r = saidasPorDia([tx({ descricao: 'Móvel', dia_vencimento: 12, valor: 300, cartao: true, parcela: 2, parcelas: 10 })], '2026-09');
+    expect(r.dias[11].itens).toEqual([{ descricao: 'Móvel (2/10)', valor: 300, tipo: 'Variável', cartao: true }]);
   });
   it('mês sem saídas', () => {
     const r = saidasPorDia([], '2026-09');
@@ -83,9 +85,8 @@ describe('saldoAcumulado', () => {
       tx({ month: '2026-08', valor: 900 }),
       tx({ month: '2026-09', type: 'entrada', valor: 1000 }),
     ];
-    const fatura = (m: string) => (m === '2026-08' ? 50 : 0);
-    // jul: +600, ago: +50, set: +1000
-    expect(saldoAcumulado(['2026-07', '2026-08', '2026-09'], txs, fatura, '2026-08')).toBe(650);
-    expect(saldoAcumulado(['2026-07', '2026-08', '2026-09'], txs, fatura, '2026-09')).toBe(1650);
+    // jul: +600, ago: +100, set: +1000
+    expect(saldoAcumulado(['2026-07', '2026-08', '2026-09'], txs, '2026-08')).toBe(700);
+    expect(saldoAcumulado(['2026-07', '2026-08', '2026-09'], txs, '2026-09')).toBe(1700);
   });
 });

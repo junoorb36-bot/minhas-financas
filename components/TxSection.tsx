@@ -19,6 +19,7 @@ export default function TxSection({ title, type, txs, color }: {
   const [valor, setValor] = useState('');
   const [cat, setCat] = useState<string>(CATEGORIAS[0]);
   const [dia, setDia] = useState('');
+  const [cartao, setCartao] = useState(false);
 
   const total = txs.reduce((s, t) => s + Number(t.valor), 0);
 
@@ -28,10 +29,11 @@ export default function TxSection({ title, type, txs, color }: {
     setValor(Number(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
     setCat(t.categoria ?? CATEGORIAS[0]);
     setDia(t.dia_vencimento ? String(t.dia_vencimento) : '');
+    setCartao(t.cartao);
   }
 
   function reset() {
-    setEditing(null); setDesc(''); setValor(''); setCat(CATEGORIAS[0]); setDia('');
+    setEditing(null); setDesc(''); setValor(''); setCat(CATEGORIAS[0]); setDia(''); setCartao(false);
   }
 
   async function submit(e: React.FormEvent) {
@@ -43,6 +45,7 @@ export default function TxSection({ title, type, txs, color }: {
       month, type, descricao: desc.trim(), valor: v,
       categoria: isEntrada ? null : cat,
       dia_vencimento: !isEntrada && dia ? Number(dia) : null,
+      cartao: !isEntrada && cartao,
     };
     try {
       if (editing) await updateTransaction(editing.id, row);
@@ -62,7 +65,10 @@ export default function TxSection({ title, type, txs, color }: {
   }
 
   async function remove(t: Transaction) {
-    if (!confirm(`Excluir "${t.descricao}"?`)) return;
+    const aviso = t.grupo
+      ? `Excluir a parcela ${t.parcela}/${t.parcelas} de "${t.descricao}"? As outras parcelas continuam (para excluir todas, use a aba Cartão).`
+      : `Excluir "${t.descricao}"?`;
+    if (!confirm(aviso)) return;
     await deleteTransaction(t.id);
     if (editing?.id === t.id) reset();
     qc.invalidateQueries();
@@ -89,9 +95,15 @@ export default function TxSection({ title, type, txs, color }: {
             {txs.length === 0 && <tr><td colSpan={6} className="empty-row">Nenhum lançamento ainda.</td></tr>}
             {txs.map(t => (
               <tr key={t.id} className={t.pago ? 'paid' : ''}>
-                <td>{t.descricao}</td>
+                <td>
+                  {t.descricao}
+                  {t.parcelas && t.parcelas > 1 && <span className="parcela-tag">{t.parcela}/{t.parcelas}</span>}
+                </td>
                 {!isEntrada && <>
-                  <td className="hide-mobile"><span className="badge">{t.categoria || 'Outros'}</span></td>
+                  <td className="hide-mobile">
+                    <span className="badge">{t.categoria || 'Outros'}</span>
+                    {t.cartao && <span className="badge cartao" title="Pago no cartão de crédito">💳 Cartão</span>}
+                  </td>
                   <td className="center hide-mobile">{t.dia_vencimento ? `dia ${t.dia_vencimento}` : '—'}</td>
                 </>}
                 <td className="num">{fmtBRL(Number(t.valor))}</td>
@@ -120,6 +132,11 @@ export default function TxSection({ title, type, txs, color }: {
           <input className="f-dia" type="number" min={1} max={31} placeholder="Dia venc." value={dia} onChange={e => setDia(e.target.value)} aria-label="Dia do vencimento" />
         )}
         <input className="f-val" placeholder="Valor (R$)" value={valor} onChange={e => setValor(e.target.value)} autoComplete="off" />
+        {!isEntrada && (
+          <label className="f-check" title="Pago no cartão de crédito">
+            <input type="checkbox" checked={cartao} onChange={e => setCartao(e.target.checked)} /> 💳 Cartão
+          </label>
+        )}
         <button type="submit">{editing ? 'Salvar' : 'Adicionar'}</button>
         {editing && <button type="button" className="btn-ghost" onClick={reset}>Cancelar</button>}
       </form>

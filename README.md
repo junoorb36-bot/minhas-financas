@@ -9,9 +9,11 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
   evolução, gastos por categoria e comparativo fixos × variáveis
 - **Lançamentos**: entradas, custos fixos e variáveis com status pago/pendente
   e dia de vencimento
-- **Cartão de crédito**: compras à vista ou parceladas, fatura de cada mês
-  calculada automaticamente (com dia de fechamento e vencimento), limite
-  utilizado e pagamento de fatura
+- **Cartão de crédito como forma de pagamento**: qualquer lançamento (fixo ou
+  variável) pode ser marcado com 💳. A aba Cartão mostra a fatura do mês, fixos ×
+  variáveis no cartão, a evolução mês a mês e aceita compras parceladas (cada
+  parcela vira um lançamento no seu mês). Com fechamento e vencimento configurados,
+  a data da compra decide em qual fatura ela entra
 - **Orçamento por categoria**: defina limites mensais e acompanhe barras de
   progresso, com alerta de estouro
 - **Mês automático**: todo dia 1º o mês novo é criado sozinho, copiando custos
@@ -76,6 +78,7 @@ Registre gastos sem abrir o app: mande uma mensagem e pronto.
 |---|---|
 | `mercado 45,90 alimentação` | registra direto na categoria |
 | `comida 45,90` | o bot pergunta a categoria com botões |
+| `uber 23,50 lazer cartão` | registra como gasto no cartão de crédito 💳 |
 | `+2000 freela` | registra uma entrada |
 
 O gasto entra no mês atual, marcado como pago, com o dia da mensagem como

@@ -8,12 +8,10 @@ import DailySpendCalendar from '@/components/DailySpendCalendar';
 import Donut from '@/components/Donut';
 import MonthNote from '@/components/MonthNote';
 import {
-  useAllMonths, useAllTransactions, useBudgets, useCard,
-  useMonthRow, usePaidInvoices, usePurchases, useTransactions,
+  useAllMonths, useAllTransactions, useBudgets, useCard, useMonthRow, useTransactions,
 } from '@/hooks/useFinance';
 import { iniciarMes as iniciarMesAction } from '@/lib/actions';
 import { saidasPorDia } from '@/lib/daily';
-import { faturaDoMes } from '@/lib/invoice';
 import { fmtBRL } from '@/lib/money';
 import { monthName } from '@/lib/months';
 import { gastosPorCategoria, monthTotals, saldoAcumulado } from '@/lib/totals';
@@ -42,20 +40,15 @@ export default function Home() {
   const allMonths = useAllMonths();
   const allTxs = useAllTransactions();
   const cardQ = useCard();
-  const purchasesQ = usePurchases();
-  const paidQ = usePaidInvoices();
   const budgetsQ = useBudgets(month);
 
-  const queries = [monthRow, txsQ, allMonths, allTxs, cardQ, purchasesQ, paidQ, budgetsQ];
+  const queries = [monthRow, txsQ, allMonths, allTxs, cardQ, budgetsQ];
   if (queries.some(x => x.isLoading)) return <p className="empty-row">Carregando…</p>;
   if (queries.some(x => x.isError)) return <p className="empty-row">Erro ao carregar dados — verifique sua conexão e recarregue.</p>;
 
   const card = cardQ.data ?? null;
-  const purchases = purchasesQ.data ?? [];
-  const paidMonths = (paidQ.data ?? []).filter(p => p.pago).map(p => p.month);
   const txs = txsQ.data ?? [];
-  const fatura = card ? faturaDoMes(purchases, card, month) : { items: [], total: 0 };
-  const t = monthTotals(txs, fatura.total);
+  const t = monthTotals(txs);
 
   async function iniciarMes() {
     try {
@@ -79,27 +72,27 @@ export default function Home() {
     );
   }
 
-  const faturaDe = (m: string) => (card ? faturaDoMes(purchases, card, m).total : 0);
-  const saldoConta = saldoAcumulado((allMonths.data ?? []).map(m => m.month), allTxs.data ?? [], faturaDe, month);
+  const saldoConta = saldoAcumulado((allMonths.data ?? []).map(m => m.month), allTxs.data ?? [], month);
 
-  const diario = saidasPorDia(txs, month, card ? { nome: card.nome, total: fatura.total, dia: card.dia_vencimento } : null);
+  const diario = saidasPorDia(txs, month);
 
-  // pendentes: lançamentos não pagos + fatura não paga
-  const faturaPaga = paidMonths.includes(month);
+  // pendentes: lançamentos fora do cartão não pagos + uma linha com o que falta pagar da fatura
+  const faturaPendente = txs.filter(x => x.cartao && !x.pago).reduce((s, x) => s + Number(x.valor), 0);
   const pend: { desc: string; tipo: string; dia: number | null; valor: number }[] = [
-    ...txs.filter(x => x.type !== 'entrada' && !x.pago)
+    ...txs.filter(x => x.type !== 'entrada' && !x.pago && !x.cartao)
       .map(x => ({ desc: x.descricao, tipo: x.type === 'fixo' ? 'Fixo' : 'Variável', dia: x.dia_vencimento, valor: Number(x.valor) })),
-    ...(card && fatura.total > 0 && !faturaPaga
-      ? [{ desc: `Fatura ${card.nome}`, tipo: 'Cartão', dia: card.dia_vencimento as number | null, valor: fatura.total }] : []),
+    ...(faturaPendente > 0
+      ? [{ desc: `Fatura ${card?.nome ?? 'do cartão'}`, tipo: 'Cartão', dia: card?.dia_vencimento ?? null, valor: Math.round(faturaPendente * 100) / 100 }]
+      : []),
   ].sort((a, b) => (a.dia || 99) - (b.dia || 99));
 
-  const gastos = gastosPorCategoria(txs, fatura.items);
+  const gastos = gastosPorCategoria(txs);
   const cats = Object.entries(gastos).sort((a, b) => b[1] - a[1]);
   const maxCat = cats.length ? cats[0][1] : 1;
 
   const evoMeses = (allMonths.data ?? []).filter(m => m.month <= month).slice(-12);
   const evo = evoMeses.map(m => {
-    const tt = monthTotals((allTxs.data ?? []).filter(x => x.month === m.month), faturaDe(m.month));
+    const tt = monthTotals((allTxs.data ?? []).filter(x => x.month === m.month));
     return { key: m.month, entradas: tt.entradas, saidas: tt.saidas, saldo: tt.saldo, nota: m.nota };
   });
 
@@ -109,7 +102,6 @@ export default function Home() {
   const composicao: [string, number, string][] = [
     ['Gastos fixos', t.fixos, 'var(--green)'],
     ['Gastos variáveis', t.variaveis, 'var(--ink)'],
-    ...(t.fatura > 0 ? [['Fatura do cartão', t.fatura, 'var(--amber)'] as [string, number, string]] : []),
   ];
 
   return (
@@ -198,13 +190,24 @@ export default function Home() {
                     <i className="dot" style={{ background: cor }} />{nome}
                   </span>
                   <div className="cat-bar-wrap">
-                    <div className="cat-bar" style={{ width: `${(valor / Math.max(1, t.fixos, t.variaveis, t.fatura)) * 100}%`, background: cor }} />
+                    <div className="cat-bar" style={{ width: `${(valor / Math.max(1, t.fixos, t.variaveis)) * 100}%`, background: cor }} />
                   </div>
                   <span className="cat-val" style={{ width: 150 }}>
                     {fmtBRL(valor)} ({Math.round((valor / t.saidas) * 100)}%)
                   </span>
                 </div>
               ))}
+              {t.cartao.total > 0 && (
+                <div className="cat-row" style={{ marginTop: 14, borderTop: '1px solid var(--border)', paddingTop: 12, flexWrap: 'wrap' }}>
+                  <Link href="/cartao" className="hint-link" style={{ textDecoration: 'none' }}>💳 No cartão</Link>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    fixos {fmtBRL(t.cartao.fixos)} · variáveis {fmtBRL(t.cartao.variaveis)}
+                  </span>
+                  <span className="cat-val" style={{ width: 'auto', marginLeft: 'auto' }}>
+                    {fmtBRL(t.cartao.total)} ({Math.round((t.cartao.total / t.saidas) * 100)}%)
+                  </span>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -4,7 +4,8 @@ import { Transaction } from './types';
 export interface ItemDia {
   descricao: string;
   valor: number;
-  tipo: 'Fixo' | 'Variável' | 'Cartão';
+  tipo: 'Fixo' | 'Variável';
+  cartao: boolean;
 }
 
 export interface DiaSaida {
@@ -22,16 +23,8 @@ export interface ResumoDiario {
   mediaPorDia: number; // total ÷ dias do mês
 }
 
-/**
- * Distribui as saídas do mês pelos dias de vencimento. A fatura do cartão entra
- * como um item único no dia de vencimento do cartão, para o total bater com as
- * saídas do mês.
- */
-export function saidasPorDia(
-  txs: Transaction[],
-  month: string,
-  fatura?: { nome: string; total: number; dia: number } | null,
-): ResumoDiario {
+/** Distribui as saídas do mês pelos dias de vencimento (no cartão, o dia da compra). */
+export function saidasPorDia(txs: Transaction[], month: string): ResumoDiario {
   const n = diasNoMes(month);
   const dias: DiaSaida[] = Array.from({ length: n }, (_, i) => ({ dia: i + 1, total: 0, itens: [] }));
   const semData: DiaSaida = { dia: 0, total: 0, itens: [] };
@@ -44,10 +37,8 @@ export function saidasPorDia(
 
   for (const t of txs) {
     if (t.type === 'entrada') continue;
-    add(t.dia_vencimento, { descricao: t.descricao, valor: Number(t.valor), tipo: t.type === 'fixo' ? 'Fixo' : 'Variável' });
-  }
-  if (fatura && fatura.total > 0) {
-    add(fatura.dia, { descricao: `Fatura ${fatura.nome}`, valor: fatura.total, tipo: 'Cartão' });
+    const descricao = t.parcelas && t.parcelas > 1 ? `${t.descricao} (${t.parcela}/${t.parcelas})` : t.descricao;
+    add(t.dia_vencimento, { descricao, valor: Number(t.valor), tipo: t.type === 'fixo' ? 'Fixo' : 'Variável', cartao: t.cartao });
   }
 
   for (const d of [...dias, semData]) d.total = Math.round(d.total * 100) / 100;

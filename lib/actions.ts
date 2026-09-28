@@ -1,8 +1,11 @@
 'use server';
+import { randomUUID } from 'node:crypto';
 import { auth } from '@/auth';
+import { gerarParcelas } from '@/lib/cartao';
 import { sql } from '@/lib/db';
+import { monthName } from '@/lib/months';
 import { iniciarMesParaUsuario } from '@/lib/newMonth';
-import { Budget, Card, CardPurchase, MonthRow, Transaction, TxType } from '@/lib/types';
+import { Budget, Card, MonthRow, Transaction, TxType } from '@/lib/types';
 
 // Toda a segurança de acesso a dados vive aqui: cada action resolve o usuário
 // da sessão e escopa as queries por user_id (não há RLS como no Supabase).
@@ -30,13 +33,15 @@ export async function listMonths(): Promise<MonthRow[]> {
 
 export async function listTransactions(month: string): Promise<Transaction[]> {
   const uid = await userId();
-  return await sql`select id, month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago
+  return await sql`select id, month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago,
+    cartao, parcela, parcelas, grupo
     from transactions where user_id = ${uid} and month = ${month} order by created_at` as Transaction[];
 }
 
 export async function listAllTransactions(): Promise<Transaction[]> {
   const uid = await userId();
-  return await sql`select id, month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago
+  return await sql`select id, month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago,
+    cartao, parcela, parcelas, grupo
     from transactions where user_id = ${uid}` as Transaction[];
 }
 
@@ -45,18 +50,6 @@ export async function getCard(): Promise<Card | null> {
   const rows = await sql`select id, nome, dia_fechamento, dia_vencimento, limite::float as limite
     from cards where user_id = ${uid} limit 1`;
   return (rows[0] as Card | undefined) ?? null;
-}
-
-export async function listPurchases(): Promise<CardPurchase[]> {
-  const uid = await userId();
-  return await sql`select id, card_id, descricao, valor_total::float as valor_total, parcelas,
-    data_compra::text as data_compra, categoria
-    from card_purchases where user_id = ${uid} order by data_compra desc, created_at desc` as CardPurchase[];
-}
-
-export async function listInvoicePayments(): Promise<{ month: string; pago: boolean }[]> {
-  const uid = await userId();
-  return await sql`select month, pago from card_invoice_payments where user_id = ${uid}` as { month: string; pago: boolean }[];
 }
 
 export async function listBudgets(month: string): Promise<Budget[]> {
@@ -93,18 +86,20 @@ export interface TxInput {
   valor: number;
   categoria: string | null;
   dia_vencimento: number | null;
+  cartao: boolean;
 }
 
 export async function insertTransaction(t: TxInput): Promise<void> {
   const uid = await userId();
-  await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, dia_vencimento)
-    values (${uid}, ${t.month}, ${t.type}, ${t.descricao}, ${t.valor}, ${t.categoria}, ${t.dia_vencimento})`;
+  await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, dia_vencimento, cartao)
+    values (${uid}, ${t.month}, ${t.type}, ${t.descricao}, ${t.valor}, ${t.categoria}, ${t.dia_vencimento},
+      ${t.type !== 'entrada' && t.cartao})`;
 }
 
 export async function updateTransaction(id: string, t: TxInput): Promise<void> {
   const uid = await userId();
   await sql`update transactions set descricao = ${t.descricao}, valor = ${t.valor},
-    categoria = ${t.categoria}, dia_vencimento = ${t.dia_vencimento}
+    categoria = ${t.categoria}, dia_vencimento = ${t.dia_vencimento}, cartao = ${t.type !== 'entrada' && t.cartao}
     where id = ${id} and user_id = ${uid}`;
 }
 
@@ -118,6 +113,12 @@ export async function deleteTransaction(id: string): Promise<void> {
   await sql`delete from transactions where id = ${id} and user_id = ${uid}`;
 }
 
+/** Exclui todas as parcelas de uma compra parcelada. */
+export async function deleteGrupo(grupo: string): Promise<void> {
+  const uid = await userId();
+  await sql`delete from transactions where grupo = ${grupo} and user_id = ${uid}`;
+}
+
 /* ── cartão ── */
 
 export async function insertCard(c: { nome: string; dia_fechamento: number; dia_vencimento: number; limite: number | null }): Promise<void> {
@@ -126,26 +127,41 @@ export async function insertCard(c: { nome: string; dia_fechamento: number; dia_
     values (${uid}, ${c.nome}, ${c.dia_fechamento}, ${c.dia_vencimento}, ${c.limite})`;
 }
 
-export async function insertPurchase(p: { card_id: string; descricao: string; valor_total: number; parcelas: number; data_compra: string; categoria: string }): Promise<void> {
+export async function updateCard(c: { nome: string; dia_fechamento: number; dia_vencimento: number; limite: number | null }): Promise<void> {
   const uid = await userId();
-  await sql`insert into card_purchases (user_id, card_id, descricao, valor_total, parcelas, data_compra, categoria)
-    values (${uid}, ${p.card_id}, ${p.descricao}, ${p.valor_total}, ${p.parcelas}, ${p.data_compra}, ${p.categoria})`;
+  await sql`update cards set nome = ${c.nome}, dia_fechamento = ${c.dia_fechamento},
+    dia_vencimento = ${c.dia_vencimento}, limite = ${c.limite} where user_id = ${uid}`;
 }
 
-export async function deletePurchase(id: string): Promise<void> {
+/**
+ * Lança uma compra no cartão. Parcelada vira uma linha por mês, ligadas pelo
+ * mesmo `grupo`. Retorna uma frase dizendo em quais faturas entrou.
+ */
+export async function insertCompraCartao(c: {
+  descricao: string; valorTotal: number; parcelas: number; categoria: string;
+  type: 'fixo' | 'variavel'; dataCompra: string | null; mesBase: string;
+}): Promise<string> {
   const uid = await userId();
-  await sql`delete from card_purchases where id = ${id} and user_id = ${uid}`;
-}
-
-export async function setInvoicePaid(cardId: string, month: string, pago: boolean): Promise<void> {
-  const uid = await userId();
-  if (pago) {
-    await sql`insert into card_invoice_payments (user_id, card_id, month, pago)
-      values (${uid}, ${cardId}, ${month}, true)
-      on conflict (user_id, card_id, month) do update set pago = true`;
-  } else {
-    await sql`delete from card_invoice_payments where user_id = ${uid} and card_id = ${cardId} and month = ${month}`;
+  const cards = await sql`select dia_fechamento, dia_vencimento from cards where user_id = ${uid} limit 1`;
+  const card = (cards[0] as Pick<Card, 'dia_fechamento' | 'dia_vencimento'> | undefined) ?? null;
+  const n = c.type === 'fixo' ? 1 : c.parcelas;
+  const parcelas = gerarParcelas({ valorTotal: c.valorTotal, parcelas: n, dataCompra: c.dataCompra, mesBase: c.mesBase, card });
+  const grupo = n > 1 ? randomUUID() : null;
+  for (const p of parcelas) {
+    await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, dia_vencimento, cartao, parcela, parcelas, grupo)
+      values (${uid}, ${p.month}, ${c.type}, ${c.descricao}, ${p.valor}, ${c.categoria}, ${p.dia}, true,
+        ${grupo ? p.parcela : null}, ${grupo ? n : null}, ${grupo})`;
   }
+  const primeira = monthName(parcelas[0].month).toLowerCase();
+  return n > 1
+    ? `${n} parcelas lançadas, de ${primeira} a ${monthName(parcelas[n - 1].month).toLowerCase()}`
+    : `Lançado na fatura de ${primeira}`;
+}
+
+/** Marca (ou desmarca) como pagos todos os itens do cartão do mês. */
+export async function setFaturaPaga(month: string, pago: boolean): Promise<void> {
+  const uid = await userId();
+  await sql`update transactions set pago = ${pago} where user_id = ${uid} and month = ${month} and cartao`;
 }
 
 /* ── orçamento ── */
@@ -165,15 +181,14 @@ export async function setBudget(month: string, categoria: string, limite: number
 
 export async function exportAll(): Promise<Record<string, unknown>> {
   const uid = await userId();
-  const [months, transactions, cards, purchases, payments, budgets] = await Promise.all([
+  const [months, transactions, cards, budgets] = await Promise.all([
     sql`select month, meta::float as meta, nota from months where user_id = ${uid} order by month`,
-    sql`select month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago from transactions where user_id = ${uid}`,
+    sql`select month, type, descricao, valor::float as valor, categoria, dia_vencimento, pago, cartao, parcela, parcelas, grupo
+      from transactions where user_id = ${uid}`,
     sql`select nome, dia_fechamento, dia_vencimento, limite::float as limite from cards where user_id = ${uid}`,
-    sql`select descricao, valor_total::float as valor_total, parcelas, data_compra::text as data_compra, categoria from card_purchases where user_id = ${uid}`,
-    sql`select month, pago from card_invoice_payments where user_id = ${uid}`,
     sql`select month, categoria, limite::float as limite from budgets where user_id = ${uid}`,
   ]);
-  return { versao: 2, months, transactions, cards, purchases, payments, budgets };
+  return { versao: 3, months, transactions, cards, budgets };
 }
 
 interface LegacyItem { desc?: string; valor?: number; recebido?: boolean; pago?: boolean; cat?: string; dia?: number | null }

@@ -15,6 +15,8 @@ export interface ParsedMsg {
   valor: number;
   /** null = usuário não informou (o bot deve perguntar com botões) */
   categoria: string | null;
+  /** a mensagem citou "cartão"/"crédito" em qualquer posição */
+  cartao: boolean;
 }
 
 /** Aceita 45 | 45,90 | 1.234,56 | 45.90 | R$45,90. Retorna null se não for valor. */
@@ -58,7 +60,10 @@ export function parseMensagem(text: string): ParsedMsg | null {
   let t = text.trim();
   const tipo: ParsedMsg['tipo'] = t.startsWith('+') ? 'entrada' : 'gasto';
   if (tipo === 'entrada') t = t.slice(1).trim();
-  const tokens = t.split(/\s+/).filter(Boolean);
+  const todos = t.split(/\s+/).filter(Boolean);
+  const ehCartao = (tok: string) => ['cartao', 'credito', '💳'].includes(normaliza(tok));
+  const cartao = tipo === 'gasto' && todos.some(ehCartao);
+  const tokens = todos.filter(tok => !ehCartao(tok));
   if (tokens.length < 2) return null;
 
   let idx = -1;
@@ -79,5 +84,5 @@ export function parseMensagem(text: string): ParsedMsg | null {
   }
   if (!descricao) return null;
   const categoria = resto ? matchCategoria(resto) : null;
-  return { tipo, descricao, valor, categoria };
+  return { tipo, descricao, valor, categoria, cartao };
 }

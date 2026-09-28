@@ -55,8 +55,10 @@ pessoal dele. Roteiro que funciona:
   arquivo idempotente em `db/migrations/` (instalações existentes).
 - Testes: `npm test` (Vitest — lógica pura em `lib/__tests__`). Typecheck:
   `npm run typecheck`. Sempre rode ambos antes de deploy.
-- Lógica de negócio pura vive em `lib/` (fatura/parcelas em `lib/invoice.ts`,
-  criação de mês em `lib/newMonth.ts`); acesso a dados em `lib/actions.ts`
+- Lógica de negócio pura vive em `lib/` (cartão/parcelas em `lib/cartao.ts` e
+  `lib/invoice.ts`, criação de mês em `lib/newMonth.ts`). O cartão NÃO é um
+  cadastro separado: é a coluna `transactions.cartao`; parcelas são linhas com
+  `parcela`/`parcelas` e o mesmo `grupo`, no mês da fatura; acesso a dados em `lib/actions.ts`
   (server actions escopadas por `user_id` — não há RLS, a segurança é aqui).
 - Webhook do Telegram: `app/api/telegram/route.ts`; cron: `app/api/cron/route.ts`.
 - Idioma do produto e das mensagens: português brasileiro.

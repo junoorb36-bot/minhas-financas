@@ -1,5 +1,5 @@
-// Aplica db/schema.sql no banco apontado por DATABASE_URL.
-// Uso: node scripts/apply-schema.mjs  (lê DATABASE_URL do ambiente)
+// Aplica db/schema.sql (ou o arquivo .sql informado) no banco apontado por DATABASE_URL.
+// Uso: node scripts/apply-schema.mjs [db/migrations/xxx.sql]  (lê DATABASE_URL do ambiente)
 import { neon } from '@neondatabase/serverless';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -9,7 +9,7 @@ const url = process.env.DATABASE_URL;
 if (!url) { console.error('DATABASE_URL não definida'); process.exit(1); }
 const sql = neon(url);
 
-const schemaPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'db', 'schema.sql');
+const schemaPath = process.argv[2] ?? join(dirname(fileURLToPath(import.meta.url)), '..', 'db', 'schema.sql');
 const schema = readFileSync(schemaPath, 'utf8');
 // remove comentários e divide em statements (schema simples, sem funções/plpgsql)
 const statements = schema

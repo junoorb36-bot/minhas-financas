@@ -2,10 +2,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import PageHead from '@/components/PageHead';
 import { useMonth, useToast } from '@/components/Providers';
-import { useBudgets, useCard, usePurchases, useTransactions } from '@/hooks/useFinance';
+import { useBudgets, useTransactions } from '@/hooks/useFinance';
 import { setBudget } from '@/lib/actions';
 import { CATEGORIAS } from '@/lib/categories';
-import { faturaDoMes } from '@/lib/invoice';
 import { fmtBRL, parseValorBR } from '@/lib/money';
 import { gastosPorCategoria } from '@/lib/totals';
 
@@ -15,16 +14,13 @@ export default function Orcamento() {
   const toast = useToast();
   const budgetsQ = useBudgets(month);
   const txsQ = useTransactions(month);
-  const cardQ = useCard();
-  const purchasesQ = usePurchases();
 
-  if (budgetsQ.isLoading || txsQ.isLoading || cardQ.isLoading || purchasesQ.isLoading) {
+  if (budgetsQ.isLoading || txsQ.isLoading) {
     return <p className="empty-row">Carregando…</p>;
   }
 
   const budgets = budgetsQ.data ?? [];
-  const fatura = cardQ.data ? faturaDoMes(purchasesQ.data ?? [], cardQ.data, month) : { items: [], total: 0 };
-  const gastos = gastosPorCategoria(txsQ.data ?? [], fatura.items);
+  const gastos = gastosPorCategoria(txsQ.data ?? []);
 
   async function setLimite(categoria: string, value: string) {
     const v = parseValorBR(value);

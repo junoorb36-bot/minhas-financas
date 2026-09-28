@@ -1,45 +1,50 @@
-import { InvoiceItem, Transaction, TxType } from './types';
+import { Transaction, TxType } from './types';
 
 export interface MonthTotals {
-  entradas: number; fixos: number; variaveis: number;
-  fatura: number; saidas: number; saldo: number;
+  entradas: number;
+  fixos: number;
+  variaveis: number;
+  saidas: number;
+  saldo: number;
+  /** a parte das saídas paga no cartão de crédito */
+  cartao: { fixos: number; variaveis: number; total: number };
 }
 
-export function monthTotals(txs: Transaction[], faturaTotal: number): MonthTotals {
-  const sum = (type: TxType) =>
-    txs.filter(t => t.type === type).reduce((s, t) => s + Number(t.valor), 0);
+const arred = (v: number) => Math.round(v * 100) / 100;
+
+export function monthTotals(txs: Transaction[]): MonthTotals {
+  const sum = (type: TxType, soCartao = false) => arred(
+    txs.filter(t => t.type === type && (!soCartao || t.cartao)).reduce((s, t) => s + Number(t.valor), 0),
+  );
   const entradas = sum('entrada');
   const fixos = sum('fixo');
   const variaveis = sum('variavel');
-  const saidas = fixos + variaveis + faturaTotal;
-  return { entradas, fixos, variaveis, fatura: faturaTotal, saidas, saldo: entradas - saidas };
+  const saidas = arred(fixos + variaveis);
+  const cFixos = sum('fixo', true);
+  const cVariaveis = sum('variavel', true);
+  return {
+    entradas, fixos, variaveis, saidas, saldo: arred(entradas - saidas),
+    cartao: { fixos: cFixos, variaveis: cVariaveis, total: arred(cFixos + cVariaveis) },
+  };
 }
 
 /** Soma dos resultados (entradas − saídas) de todos os meses até `ate`, inclusive. */
-export function saldoAcumulado(
-  meses: string[],
-  txs: Transaction[],
-  faturaDoMes: (month: string) => number,
-  ate: string,
-): number {
+export function saldoAcumulado(meses: string[], txs: Transaction[], ate: string): number {
   let total = 0;
   for (const m of meses) {
     if (m > ate) continue;
-    total += monthTotals(txs.filter(t => t.month === m), faturaDoMes(m)).saldo;
+    total += monthTotals(txs.filter(t => t.month === m)).saldo;
   }
-  return Math.round(total * 100) / 100;
+  return arred(total);
 }
 
-/** Gastos (fixos + variáveis + parcelas do cartão) somados por categoria. */
-export function gastosPorCategoria(txs: Transaction[], invoiceItems: InvoiceItem[]): Record<string, number> {
+/** Gastos (fixos + variáveis, dentro e fora do cartão) somados por categoria. */
+export function gastosPorCategoria(txs: Transaction[]): Record<string, number> {
   const map: Record<string, number> = {};
   for (const t of txs) {
     if (t.type === 'entrada') continue;
     const c = t.categoria || 'Outros';
-    map[c] = (map[c] || 0) + Number(t.valor);
-  }
-  for (const i of invoiceItems) {
-    map[i.categoria] = (map[i.categoria] || 0) + i.valor;
+    map[c] = arred((map[c] || 0) + Number(t.valor));
   }
   return map;
 }

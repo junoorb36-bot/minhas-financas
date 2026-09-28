@@ -17,11 +17,11 @@ export async function iniciarMesParaUsuario(uid: string, month: string): Promise
 
   let copiados = 0;
   if (prev) {
-    const fixos = await sql`select descricao, valor, categoria, dia_vencimento from transactions
+    const fixos = await sql`select descricao, valor, categoria, dia_vencimento, cartao from transactions
       where user_id = ${uid} and month = ${prev.month} and type = 'fixo'`;
     for (const f of fixos) {
-      await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, dia_vencimento)
-        values (${uid}, ${month}, 'fixo', ${f.descricao}, ${f.valor}, ${f.categoria}, ${f.dia_vencimento})`;
+      await sql`insert into transactions (user_id, month, type, descricao, valor, categoria, dia_vencimento, cartao)
+        values (${uid}, ${month}, 'fixo', ${f.descricao}, ${f.valor}, ${f.categoria}, ${f.dia_vencimento}, ${f.cartao})`;
     }
     copiados = fixos.length;
     const buds = await sql`select categoria, limite from budgets

@@ -78,7 +78,10 @@ export default function DailySpendCalendar({ resumo, month }: { resumo: ResumoDi
           {detalhe.itens.map((i, idx) => (
             <div className="cal-detail-row" key={idx}>
               <span>{i.descricao}</span>
-              <span className="badge">{i.tipo}</span>
+              <span>
+                <span className="badge">{i.tipo}</span>
+                {i.cartao && <span className="badge cartao">💳</span>}
+              </span>
               <span className="num">{fmtBRL(i.valor)}</span>
             </div>
           ))}

@@ -2,13 +2,17 @@ export type TxType = 'entrada' | 'fixo' | 'variavel';
 
 export interface Transaction {
   id: string;
-  month: string; // 'YYYY-MM'
+  month: string; // 'YYYY-MM' — para itens do cartão, o mês em que a fatura é paga
   type: TxType;
   descricao: string;
   valor: number;
   categoria: string | null; // null para entradas
-  dia_vencimento: number | null; // null para entradas
+  dia_vencimento: number | null; // null para entradas; no cartão, o dia da compra
   pago: boolean; // para entradas significa "recebido"
+  cartao: boolean; // pago no cartão de crédito
+  parcela: number | null; // compras parceladas: número desta parcela (1-based)
+  parcelas: number | null; // compras parceladas: total de parcelas
+  grupo: string | null; // compras parceladas: id compartilhado por todas as parcelas
 }
 
 export interface MonthRow {
@@ -26,28 +30,9 @@ export interface Card {
   limite: number | null;
 }
 
-export interface CardPurchase {
-  id: string;
-  card_id: string;
-  descricao: string;
-  valor_total: number;
-  parcelas: number; // >= 1
-  data_compra: string; // 'YYYY-MM-DD'
-  categoria: string;
-}
-
 export interface Budget {
   id: string;
   month: string;
   categoria: string;
   limite: number;
-}
-
-export interface InvoiceItem {
-  purchaseId: string;
-  descricao: string;
-  categoria: string;
-  parcela: number; // 1-based
-  parcelas: number;
-  valor: number;
 }

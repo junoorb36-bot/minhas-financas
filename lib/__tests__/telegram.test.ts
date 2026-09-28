@@ -19,12 +19,12 @@ describe('dataBrasil', () => {
 describe('parseMensagem', () => {
   it('gasto sem categoria fica com categoria null (bot pergunta)', () => {
     expect(parseMensagem('mercado 45,90')).toEqual({
-      tipo: 'gasto', descricao: 'mercado', valor: 45.9, categoria: null,
+      tipo: 'gasto', descricao: 'mercado', valor: 45.9, categoria: null, cartao: false,
     });
   });
   it('gasto com categoria registra direto', () => {
     expect(parseMensagem('uber 23,50 transporte')).toEqual({
-      tipo: 'gasto', descricao: 'uber', valor: 23.5, categoria: 'Transporte',
+      tipo: 'gasto', descricao: 'uber', valor: 23.5, categoria: 'Transporte', cartao: false,
     });
   });
   it('categoria sem acento é reconhecida', () => {
@@ -35,7 +35,7 @@ describe('parseMensagem', () => {
   });
   it('descrição com várias palavras e números', () => {
     expect(parseMensagem('uber 2 viagens 30')).toEqual({
-      tipo: 'gasto', descricao: 'uber 2 viagens', valor: 30, categoria: null,
+      tipo: 'gasto', descricao: 'uber 2 viagens', valor: 30, categoria: null, cartao: false,
     });
   });
   it('aceita ponto decimal e prefixo R$', () => {
@@ -47,16 +47,31 @@ describe('parseMensagem', () => {
   });
   it('entrada com prefixo +, nas duas ordens', () => {
     expect(parseMensagem('+2000 freela')).toEqual({
-      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: null,
+      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: null, cartao: false,
     });
     expect(parseMensagem('+freela 2000')).toEqual({
-      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: null,
+      tipo: 'entrada', descricao: 'freela', valor: 2000, categoria: null, cartao: false,
     });
   });
   it('rejeita mensagens sem valor ou sem descrição', () => {
     expect(parseMensagem('mercado')).toBeNull();
     expect(parseMensagem('45,90')).toBeNull();
     expect(parseMensagem('oi tudo bem')).toBeNull();
+  });
+});
+
+describe('parseMensagem — cartão', () => {
+  it('a palavra cartão marca o gasto, em qualquer posição', () => {
+    expect(parseMensagem('uber 23,50 lazer cartão')).toEqual({
+      tipo: 'gasto', descricao: 'uber', valor: 23.5, categoria: 'Lazer', cartao: true,
+    });
+    expect(parseMensagem('cartao uber 23,50')).toEqual({
+      tipo: 'gasto', descricao: 'uber', valor: 23.5, categoria: null, cartao: true,
+    });
+    expect(parseMensagem('móvel 800 crédito')!.cartao).toBe(true);
+  });
+  it('sem a palavra, não é cartão', () => {
+    expect(parseMensagem('mercado 45,90')!.cartao).toBe(false);
   });
 });
 
