@@ -4,6 +4,7 @@ import PageHead from '@/components/PageHead';
 import { useMonth, useToast } from '@/components/Providers';
 import { useBudgets, useTransactions } from '@/hooks/useFinance';
 import { setBudget } from '@/lib/actions';
+import { statusOrcamento } from '@/lib/budget';
 import { CATEGORIAS } from '@/lib/categories';
 import { fmtBRL, parseValorBR } from '@/lib/money';
 import { gastosPorCategoria } from '@/lib/totals';
@@ -48,7 +49,8 @@ export default function Orcamento() {
           const limite = b ? Number(b.limite) : 0;
           const gasto = gastos[categoria] || 0;
           const pct = limite > 0 ? Math.min(100, (gasto / limite) * 100) : 0;
-          const cls = limite > 0 && gasto > limite ? 'over' : pct >= 80 ? 'warn' : '';
+          const status = limite > 0 ? statusOrcamento(gasto, limite) : 'ok';
+          const cls = status === 'estourou' ? 'over' : status === 'alerta' ? 'warn' : '';
           return (
             <div className="budget-row" key={categoria}>
               <span className="b-cat">{categoria}</span>

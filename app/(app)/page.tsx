@@ -11,6 +11,7 @@ import {
   useAllMonths, useAllTransactions, useBudgets, useCard, useMonthRow, useTransactions,
 } from '@/hooks/useFinance';
 import { iniciarMes as iniciarMesAction } from '@/lib/actions';
+import { situacaoOrcamento } from '@/lib/budget';
 import { saidasPorDia } from '@/lib/daily';
 import { fmtBRL } from '@/lib/money';
 import { monthName } from '@/lib/months';
@@ -96,8 +97,7 @@ export default function Home() {
     return { key: m.month, entradas: tt.entradas, saidas: tt.saidas, saldo: tt.saldo, nota: m.nota };
   });
 
-  const totalOrcado = (budgetsQ.data ?? []).reduce((s, b) => s + Number(b.limite), 0);
-  const totalGasto = Object.values(gastos).reduce((s, v) => s + v, 0);
+  const orcamento = situacaoOrcamento(budgetsQ.data ?? [], gastos);
 
   const composicao: [string, number, string][] = [
     ['Gastos fixos', t.fixos, 'var(--green)'],
@@ -142,13 +142,28 @@ export default function Home() {
               <span className="cat-val">{fmtBRL(val)}</span>
             </Link>
           ))}
-          {totalOrcado > 0 && (
-            <div className="cat-row" style={{ marginTop: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-              <span className="cat-name" style={{ color: 'var(--text)', fontWeight: 600 }}>Orçamento</span>
-              <div style={{ flex: 1 }} />
-              <span className="cat-val" style={{ width: 'auto' }}>{fmtBRL(totalGasto)} de {fmtBRL(totalOrcado)}</span>
+          <div className="orc-resumo">
+            <div className="orc-head">
+              <h4>Orçamento do mês</h4>
+              <Link href="/orcamento" className="hint-link">{orcamento.length ? 'ajustar limites' : 'definir limites'}</Link>
             </div>
-          )}
+            {orcamento.length === 0 ? (
+              <div className="card-sub">Defina limites por categoria para acompanhar aqui se está dentro do previsto.</div>
+            ) : (
+              <div className="orc-pills">
+                {orcamento.map(o => (
+                  <Link
+                    key={o.categoria}
+                    href={`/lancamentos?cat=${encodeURIComponent(o.categoria)}`}
+                    className={`orc-pill ${o.status}`}
+                    title={`${o.categoria}: ${fmtBRL(o.gasto)} de ${fmtBRL(o.limite)}${o.status === 'estourou' ? ` — passou ${fmtBRL(o.gasto - o.limite)}` : ''}`}
+                  >
+                    <i />{o.categoria}<span>{o.pct}%</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <MonthNote key={month} month={month} nota={monthRow.data.nota} />
         </div>
       </div>
