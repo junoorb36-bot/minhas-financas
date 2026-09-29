@@ -11,7 +11,7 @@ import {
   useAllMonths, useAllTransactions, useBudgets, useCard, useMonthRow, useTransactions,
 } from '@/hooks/useFinance';
 import { iniciarMes as iniciarMesAction } from '@/lib/actions';
-import { situacaoOrcamento } from '@/lib/budget';
+import { ROTULO_STATUS, situacaoOrcamento } from '@/lib/budget';
 import { saidasPorDia } from '@/lib/daily';
 import { fmtBRL } from '@/lib/money';
 import { monthName } from '@/lib/months';
@@ -156,9 +156,11 @@ export default function Home() {
                     key={o.categoria}
                     href={`/lancamentos?cat=${encodeURIComponent(o.categoria)}`}
                     className={`orc-pill ${o.status}`}
-                    title={`${o.categoria}: ${fmtBRL(o.gasto)} de ${fmtBRL(o.limite)}${o.status === 'estourou' ? ` — passou ${fmtBRL(o.gasto - o.limite)}` : ''}`}
+                    title={`${o.categoria}: ${fmtBRL(o.gasto)} de ${fmtBRL(o.limite)}${o.status === 'estourou'
+                      ? ` — passou ${fmtBRL(o.gasto - o.limite)}`
+                      : ` — sobram ${fmtBRL(o.limite - o.gasto)}`}`}
                   >
-                    <i />{o.categoria}<span>{o.pct}%</span>
+                    <i />{o.categoria} · <span>{ROTULO_STATUS[o.status]}</span>
                   </Link>
                 ))}
               </div>

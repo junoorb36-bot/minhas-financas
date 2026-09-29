@@ -17,6 +17,12 @@ export function statusOrcamento(gasto: number, limite: number): StatusOrcamento 
   return 'ok';
 }
 
+export const ROTULO_STATUS: Record<StatusOrcamento, string> = {
+  ok: 'tranquilo',
+  alerta: 'atenção',
+  estourou: 'estourou',
+};
+
 /** Situação de cada categoria que tem limite no mês, as mais críticas primeiro. */
 export function situacaoOrcamento(budgets: Budget[], gastos: Record<string, number>): ItemOrcamento[] {
   return budgets

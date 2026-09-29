@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { situacaoOrcamento, statusOrcamento } from '@/lib/budget';
+import { ROTULO_STATUS, situacaoOrcamento, statusOrcamento } from '@/lib/budget';
 import { Budget } from '@/lib/types';
 
 const b = (categoria: string, limite: number): Budget => ({ id: categoria, month: '2026-09', categoria, limite });
@@ -32,5 +32,12 @@ describe('situacaoOrcamento', () => {
   });
   it('categoria com limite e sem gasto fica em 0%', () => {
     expect(situacaoOrcamento([b('Educação', 200)], {})[0]).toMatchObject({ gasto: 0, pct: 0, status: 'ok' });
+  });
+});
+
+describe('ROTULO_STATUS', () => {
+  it('um rótulo em palavras para cada status', () => {
+    expect([statusOrcamento(100, 500), statusOrcamento(450, 500), statusOrcamento(1616.17, 500)].map(s => ROTULO_STATUS[s]))
+      .toEqual(['tranquilo', 'atenção', 'estourou']);
   });
 });
