@@ -133,14 +133,14 @@ export default function Home() {
         </div>
         <div className="card chart-card cat-card">
           <h3>Gastos por categoria</h3>
-          <div className="card-sub">lançamentos + parcelas do cartão</div>
+          <div className="card-sub">dentro e fora do cartão · clique numa categoria para ver os lançamentos</div>
           {cats.length === 0 && <div className="empty-row">Cadastre gastos para ver a divisão por categoria.</div>}
           {cats.map(([cat, val]) => (
-            <div className="cat-row" key={cat}>
+            <Link className="cat-row cat-link" key={cat} href={`/lancamentos?cat=${encodeURIComponent(cat)}`} title={`Ver os lançamentos de ${cat}`}>
               <span className="cat-name">{cat}</span>
               <div className="cat-bar-wrap"><div className="cat-bar" style={{ width: `${(val / maxCat) * 100}%` }} /></div>
               <span className="cat-val">{fmtBRL(val)}</span>
-            </div>
+            </Link>
           ))}
           {totalOrcado > 0 && (
             <div className="cat-row" style={{ marginTop: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>

@@ -7,9 +7,12 @@ import { fmtBRL, parseValorBR } from '@/lib/money';
 import { Transaction, TxType } from '@/lib/types';
 import { useMonth, useToast } from './Providers';
 
-export default function TxSection({ title, type, txs, color }: {
+export default function TxSection({ title, type, txs, color, categoriaPadrao }: {
   title: string; type: TxType; txs: Transaction[]; color: 'green' | 'red';
+  /** categoria já selecionada no formulário (ex.: quando a lista está filtrada) */
+  categoriaPadrao?: string | null;
 }) {
+  const catInicial = categoriaPadrao && (CATEGORIAS as readonly string[]).includes(categoriaPadrao) ? categoriaPadrao : CATEGORIAS[0];
   const { month } = useMonth();
   const qc = useQueryClient();
   const toast = useToast();
@@ -17,7 +20,7 @@ export default function TxSection({ title, type, txs, color }: {
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [desc, setDesc] = useState('');
   const [valor, setValor] = useState('');
-  const [cat, setCat] = useState<string>(CATEGORIAS[0]);
+  const [cat, setCat] = useState<string>(catInicial);
   const [dia, setDia] = useState('');
   const [cartao, setCartao] = useState(false);
 
@@ -27,13 +30,13 @@ export default function TxSection({ title, type, txs, color }: {
     setEditing(t);
     setDesc(t.descricao);
     setValor(Number(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
-    setCat(t.categoria ?? CATEGORIAS[0]);
+    setCat(t.categoria ?? catInicial);
     setDia(t.dia_vencimento ? String(t.dia_vencimento) : '');
     setCartao(t.cartao);
   }
 
   function reset() {
-    setEditing(null); setDesc(''); setValor(''); setCat(CATEGORIAS[0]); setDia(''); setCartao(false);
+    setEditing(null); setDesc(''); setValor(''); setCat(catInicial); setDia(''); setCartao(false);
   }
 
   async function submit(e: React.FormEvent) {
