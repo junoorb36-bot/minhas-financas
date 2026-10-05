@@ -5,17 +5,18 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
 
 ## Funcionalidades
 
-- **Visão geral do mês**: saldo, entradas, saídas, meta de economia, gráfico de
-  evolução, gastos por categoria e comparativo fixos × variáveis
-- **Lançamentos**: entradas, custos fixos e variáveis com status pago/pendente
-  e dia de vencimento
+- **Visão geral do mês**: resultado, receitas, despesas e saldo em conta;
+  calendário de **saídas por dia**; gastos por categoria (clique numa categoria
+  para ver os lançamentos dela); evolução mês a mês e comparativo fixos × variáveis
+- **Lançamentos**: entradas, custos fixos e variáveis com status pago/pendente,
+  dia de vencimento e **filtro por categoria** (pílulas com o total de cada uma)
 - **Cartão de crédito como forma de pagamento**: qualquer lançamento (fixo ou
   variável) pode ser marcado com 💳. A aba Cartão mostra a fatura do mês, fixos ×
   variáveis no cartão, a evolução mês a mês e aceita compras parceladas (cada
   parcela vira um lançamento no seu mês). Com fechamento e vencimento configurados,
   a data da compra decide em qual fatura ela entra
-- **Orçamento por categoria**: defina limites mensais e acompanhe barras de
-  progresso, com alerta de estouro
+- **Orçamento por categoria**: defina limites mensais; na Visão geral cada
+  categoria aparece como *tranquilo*, *atenção* ou *estourou*
 - **Mês automático**: todo dia 1º o mês novo é criado sozinho, copiando custos
   fixos, orçamento e meta do mês anterior
 - **Bot do Telegram (opcional)**: mande `mercado 45,90` para o seu bot e o
@@ -35,7 +36,7 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
 ## 🚀 Instalação (~10 minutos, tudo grátis)
 
 > 🧑‍🏫 **Nunca programou?** Siga o **[guia para iniciantes](INSTALACAO.md)** —
-> o Claude Code instala tudo para você, sem usar terminal.
+> o Claude Code (ou o Codex) instala tudo para você, sem usar terminal.
 
 ### 1. Crie o banco de dados (Neon)
 
@@ -120,9 +121,10 @@ estiver configurado, o bot avisa.
 
 ## 🔄 Atualizando uma instalação antiga
 
-Ao puxar uma versão nova, rode no SQL Editor do Neon os arquivos de
-[`db/migrations/`](db/migrations) que ainda não aplicou (são seguros para rodar mais
-de uma vez). Depois faça o *Redeploy* na Vercel.
+Só para quem instalou **antes de setembro de 2026**: ao puxar uma versão nova,
+rode no SQL Editor do Neon os arquivos de [`db/migrations/`](db/migrations) que ainda
+não aplicou (são seguros para rodar mais de uma vez) e faça o *Redeploy* na Vercel.
+Instalações novas não precisam deles: o `db/schema.sql` já traz tudo.
 
 ## 💻 Desenvolvimento local
 

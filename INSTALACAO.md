@@ -1,4 +1,4 @@
-# 🧑‍🏫 Instalação para iniciantes (com o Claude Code)
+# 🧑‍🏫 Instalação para iniciantes (com o Claude Code ou o Codex)
 
 Este guia é para quem **nunca programou**. Você não vai usar terminal nem
 digitar comandos: o aplicativo **Claude Code** faz a parte técnica, e você só
@@ -11,6 +11,10 @@ num banco só seu.
 **Tempo estimado:** 20 a 30 minutos.
 
 ---
+
+> 💡 **Usa o Codex (OpenAI) em vez do Claude?** O caminho é o mesmo: abra a pasta no
+> Codex no Passo 3 e cole a mesma mensagem do Passo 4. O repositório tem um
+> `AGENTS.md`, que o Codex lê automaticamente, com o mesmo roteiro de instalação.
 
 ## Antes de começar — 3 contas grátis
 
@@ -55,7 +59,7 @@ Copie o texto abaixo inteiro e cole na conversa do Claude Code:
 > https://github.com/junoorb36-bot/minhas-financas
 >
 > Baixe o código para esta pasta (se o git não estiver disponível, use o ZIP
-> do GitHub), leia o arquivo CLAUDE.md e siga o roteiro de instalação de lá.
+> do GitHub), leia o arquivo CLAUDE.md (ou AGENTS.md) e siga o roteiro de instalação de lá.
 >
 > Sou leigo em programação: me guie passo a passo em linguagem simples,
 > dizendo exatamente onde clicar. Já criei minhas contas na Neon e na Vercel.
