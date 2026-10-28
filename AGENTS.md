@@ -12,6 +12,8 @@ Resumo para começar:
   (criar o projeto no Neon, aprovar o login da Vercel, criar o bot no BotFather).
 - No Windows, adicione variáveis na Vercel com `printf '%s' "$valor" | npx vercel env add ...`
   (Git Bash); o pipe do PowerShell corrompe o valor.
+- Na Vercel, **nunca reutilize um projeto que já existe**: confira com
+  `npx vercel project ls` e escolha um nome novo antes do `vercel link`.
 - Para instalações novas use só `db/schema.sql`. Os arquivos de `db/migrations/`
   servem apenas para atualizar instalações antigas.
 - Fale com o usuário em português brasileiro, em linguagem simples.

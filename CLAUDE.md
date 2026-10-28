@@ -20,9 +20,13 @@ pessoal dele. Roteiro que funciona:
    `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
 3. **Vercel** — `npx vercel login` imprime uma URL de autorização
    (device flow); peça ao usuário para abrir e aprovar. Depois:
-   `npx vercel link --yes --project minhas-financas`, adicione
+   `npx vercel link --yes --project <nome-novo>`, adicione
    `DATABASE_URL` e `AUTH_SECRET` como env vars de produção e rode
    `npx vercel deploy --prod --yes`.
+   ⚠️ **Antes do `link`, rode `npx vercel project ls`.** Se já existir um projeto
+   com o nome escolhido, **use outro nome** (ex.: `minhas-financas-2`). Linkar num
+   projeto existente sobrescreve o código e as variáveis de uma instalação que já
+   está em uso — e os dados "somem" do site (ficam no banco antigo).
 4. **Teste** — o fluxo de login pode ser validado por API:
    `GET /api/auth/csrf` → `POST /api/auth/callback/credentials`
    (`csrfToken` + `login=<teste>`) → `GET /api/auth/session`.
