@@ -1,52 +1,57 @@
-import { fmtCompacto } from '@/lib/money';
+import { fmtBRL, fmtCompacto } from '@/lib/money';
 import { shortMonth } from '@/lib/months';
 import { PontoMes } from '@/lib/trend';
 
-/** Barras do gasto mês a mês, com linha tracejada da média e linha do limite do orçamento. */
+interface Linha { tipo: 'media' | 'limite'; valor: number; pos: number }
+
+/**
+ * Barras do gasto mês a mês com as linhas de média e de limite. Feito em HTML
+ * (e não SVG escalado) para o texto manter o tamanho em qualquer largura; as
+ * etiquetas das linhas ficam numa coluna própria para não cobrir as barras.
+ */
 export default function CategoryTrendChart({ serie, media, limite }: { serie: PontoMes[]; media: number | null; limite: number | null }) {
-  const W = 640, H = 240, padL = 10, padR = 10, padT = 26, padB = 28;
-  const innerW = W - padL - padR, innerH = H - padT - padB;
-  const max = Math.max(1, ...serie.map(p => p.total), media ?? 0, limite ?? 0) * 1.08;
-  const base = padT + innerH;
-  const y = (v: number) => base - (v / max) * innerH;
-  const slot = innerW / serie.length;
-  const barW = Math.min(56, slot * 0.55);
+  const max = Math.max(1, ...serie.map(p => p.total), media ?? 0, limite ?? 0) * 1.12;
+  const pct = (v: number) => (v / max) * 100;
+
+  const linhas: Linha[] = [];
+  if (media !== null && media > 0) linhas.push({ tipo: 'media', valor: media, pos: pct(media) });
+  if (limite !== null) linhas.push({ tipo: 'limite', valor: limite, pos: pct(limite) });
+  // etiquetas muito próximas: afasta a de baixo para não se sobreporem
+  if (linhas.length === 2) {
+    const [alta, baixa] = linhas[0].pos >= linhas[1].pos ? [linhas[0], linhas[1]] : [linhas[1], linhas[0]];
+    if (alta.pos - baixa.pos < 12) baixa.pos = Math.max(0, alta.pos - 12);
+  }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Gasto da categoria mês a mês">
-      <line x1={padL} y1={base} x2={W - padR} y2={base} stroke="var(--border)" />
-      {serie.map((p, i) => {
-        const cx = padL + slot * i + slot / 2;
-        const atual = i === serie.length - 1;
-        const acimaLimite = limite !== null && p.total > limite;
-        const cor = acimaLimite ? 'var(--red)' : 'var(--green)';
-        return (
-          <g key={p.month}>
-            <rect x={cx - barW / 2} y={y(p.total)} width={barW} height={Math.max(base - y(p.total), p.total > 0 ? 2 : 0)} rx={6}
-              fill={cor} opacity={atual ? 1 : 0.45} />
-            {p.total > 0 && (
-              <text x={cx} y={y(p.total) - 7} textAnchor="middle" fontSize={12} fontWeight={atual ? 700 : 500} fill="var(--text)">
-                {fmtCompacto(p.total)}
-              </text>
-            )}
-            <text x={cx} y={H - 9} textAnchor="middle" fontSize={12} fontWeight={atual ? 700 : 400} fill="var(--text-subtle)">
-              {shortMonth(p.month)}
-            </text>
-          </g>
-        );
-      })}
-      {media !== null && media > 0 && (
-        <g>
-          <line x1={padL} y1={y(media)} x2={W - padR} y2={y(media)} stroke="var(--ink)" strokeDasharray="6 5" strokeWidth={1.5} opacity={0.7} />
-          <text x={W - padR} y={y(media) - 5} textAnchor="end" fontSize={11} fill="var(--text-muted)">média {fmtCompacto(media)}</text>
-        </g>
-      )}
-      {limite !== null && (
-        <g>
-          <line x1={padL} y1={y(limite)} x2={W - padR} y2={y(limite)} stroke="var(--amber)" strokeWidth={2} />
-          <text x={padL} y={y(limite) - 5} fontSize={11} fontWeight={600} fill="var(--amber)">limite {fmtCompacto(limite)}</text>
-        </g>
-      )}
-    </svg>
+    <div className="tchart" role="img" aria-label="Gasto da categoria mês a mês">
+      <div className="tchart-plot">
+        {linhas.map(l => (
+          <div key={`linha-${l.tipo}`} className={`tchart-line ${l.tipo}`} style={{ bottom: `${pct(l.valor)}%` }} />
+        ))}
+        {serie.map((p, i) => {
+          const atual = i === serie.length - 1;
+          const estourou = limite !== null && p.total > limite;
+          return (
+            <div key={p.month} className="tchart-col" title={`${shortMonth(p.month)}: ${fmtBRL(p.total)}`}>
+              <div className={`tchart-bar ${estourou ? 'acima' : ''} ${atual ? 'atual' : ''}`} style={{ height: `${pct(p.total)}%` }}>
+                {p.total > 0 && <span className="tchart-val">{fmtCompacto(p.total)}</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="tchart-gutter">
+        {linhas.map(l => (
+          <span key={`tag-${l.tipo}`} className={`tchart-tag ${l.tipo}`} style={{ bottom: `${l.pos}%` }}>
+            {l.tipo === 'media' ? 'média' : 'limite'} {fmtCompacto(l.valor)}
+          </span>
+        ))}
+      </div>
+      <div className="tchart-months">
+        {serie.map((p, i) => (
+          <span key={p.month} className={i === serie.length - 1 ? 'atual' : ''}>{shortMonth(p.month)}</span>
+        ))}
+      </div>
+    </div>
   );
 }

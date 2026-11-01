@@ -6,7 +6,7 @@ import CategoryTrendChart from '@/components/CategoryTrendChart';
 import { useMonth } from '@/components/Providers';
 import { useAllMonths, useAllTransactions, useBudgets } from '@/hooks/useFinance';
 import { fmtBRL, fmtCompacto } from '@/lib/money';
-import { monthName, shortMonth } from '@/lib/months';
+import { monthName, shortMonth, todayKey } from '@/lib/months';
 import { EvolucaoCategoria, Tendencia, evolucaoPorCategoria } from '@/lib/trend';
 
 const MESES_NO_GRAFICO = 6;
@@ -45,6 +45,17 @@ function Diferenca({ atual, base, rotulo }: { atual: number; base: number | null
   );
 }
 
+function VsLimite({ atual, limite }: { atual: number; limite: number }) {
+  const passou = atual > limite;
+  return (
+    <div className="cmp-num">
+      <span>Limite do orçamento ({fmtCompacto(limite)})</span>
+      <strong className={passou ? 'r' : 'g'}>{passou ? `passou ${fmtBRL(atual - limite)}` : `sobram ${fmtBRL(limite - atual)}`}</strong>
+      <small>{Math.round((atual / limite) * 100)}% do limite usado</small>
+    </div>
+  );
+}
+
 export default function Comparativo() {
   const { month } = useMonth();
   const allTxs = useAllTransactions();
@@ -69,6 +80,7 @@ export default function Comparativo() {
   }
 
   const emFoco = evolucao.find(e => e.categoria === foco) ?? evolucao[0];
+  const emAndamento = month === todayKey();
   const melhoras = evolucao.filter(e => e.tendencia === 'abaixo').length;
   const pioras = evolucao.filter(e => e.tendencia === 'acima').length;
 
@@ -100,16 +112,21 @@ export default function Comparativo() {
               <Diferenca atual={emFoco.atual} base={emFoco.anterior} rotulo="Vs mês anterior" />
               <Diferenca atual={emFoco.atual} base={emFoco.media} rotulo={`Vs sua média (${meses.length - 1} meses)`} />
               {limites[emFoco.categoria] !== undefined && (
-                <Diferenca atual={emFoco.atual} base={limites[emFoco.categoria]} rotulo="Vs limite do orçamento" />
+                <VsLimite atual={emFoco.atual} limite={limites[emFoco.categoria]} />
               )}
             </div>
 
+            {emAndamento && (
+              <div className="aviso-andamento">
+                {monthName(month)} ainda está em andamento: os valores vão crescer até o fim do mês. Para comparar um mês fechado, volte com a seta ‹.
+              </div>
+            )}
             <CategoryTrendChart serie={emFoco.serie} media={emFoco.media} limite={limites[emFoco.categoria] ?? null} />
             <div className="legend">
-              <span><i className="dot" style={{ background: 'var(--green)' }} />Gasto do mês</span>
-              <span><i className="dot" style={{ background: 'var(--red)' }} />Acima do limite</span>
-              <span><i className="dot" style={{ background: 'var(--ink)' }} />Média</span>
-              {limites[emFoco.categoria] !== undefined && <span><i className="dot" style={{ background: 'var(--amber)' }} />Limite</span>}
+              <span><i className="dot" style={{ background: 'var(--green)' }} />Dentro do limite</span>
+              {limites[emFoco.categoria] !== undefined && <span><i className="dot" style={{ background: 'var(--red)' }} />Acima do limite</span>}
+              <span><i className="tchart-legend-line media" />Sua média</span>
+              {limites[emFoco.categoria] !== undefined && <span><i className="tchart-legend-line limite" />Limite</span>}
             </div>
           </div>
 
