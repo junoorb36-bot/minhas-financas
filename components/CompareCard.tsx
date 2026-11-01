@@ -21,7 +21,7 @@ export default function CompareCard({ variacoes, nomeAnterior }: { variacoes: Va
       {visiveis.map(v => (
         <Link
           key={v.categoria}
-          href={`/lancamentos?cat=${encodeURIComponent(v.categoria)}`}
+          href={`/comparativo?cat=${encodeURIComponent(v.categoria)}`}
           className={`orc-pill ${v.status === 'melhorou' ? 'ok' : 'estourou'}`}
           title={`${v.categoria}: ${fmtBRL(v.atual)} agora, ${fmtBRL(v.anterior)} em ${nomeAnterior} — gastou ${fmtBRL(Math.abs(v.diferenca))} a ${v.status === 'melhorou' ? 'menos' : 'mais'}`}
         >

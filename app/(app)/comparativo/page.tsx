@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import PageHead from '@/components/PageHead';
 import CategoryTrendChart from '@/components/CategoryTrendChart';
@@ -96,7 +97,7 @@ function DetalheMes({ categoria, month, itens, media, onClose }: {
   );
 }
 
-export default function Comparativo() {
+function Comparativo() {
   const { month } = useMonth();
   const allTxs = useAllTransactions();
   const allMonths = useAllMonths();
@@ -104,9 +105,17 @@ export default function Comparativo() {
   const [foco, setFoco] = useState<string | null>(null);
   const [mesSel, setMesSel] = useState<string | null>(null);
 
+  const catUrl = useSearchParams().get('cat');
+
+  // vindo de um link (?cat=Lanche), a categoria do link entra em foco e fica salva
   useEffect(() => {
-    try { setFoco(localStorage.getItem(CHAVE_FOCO)); } catch {}
-  }, []);
+    if (catUrl) {
+      setFoco(catUrl);
+      try { localStorage.setItem(CHAVE_FOCO, catUrl); } catch {}
+    } else {
+      try { setFoco(localStorage.getItem(CHAVE_FOCO)); } catch {}
+    }
+  }, [catUrl]);
 
   if ([allTxs, allMonths, budgetsQ].some(q => q.isLoading)) return <p className="empty-row">Carregando…</p>;
 
@@ -216,5 +225,13 @@ export default function Comparativo() {
         </>
       )}
     </>
+  );
+}
+
+export default function ComparativoPage() {
+  return (
+    <Suspense fallback={<p className="empty-row">Carregando…</p>}>
+      <Comparativo />
+    </Suspense>
   );
 }
