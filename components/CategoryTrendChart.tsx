@@ -9,7 +9,12 @@ interface Linha { tipo: 'media' | 'limite'; valor: number; pos: number }
  * (e não SVG escalado) para o texto manter o tamanho em qualquer largura; as
  * etiquetas das linhas ficam numa coluna própria para não cobrir as barras.
  */
-export default function CategoryTrendChart({ serie, media, limite }: { serie: PontoMes[]; media: number | null; limite: number | null }) {
+export default function CategoryTrendChart({ serie, media, limite, selecionado, onSelect }: {
+  serie: PontoMes[]; media: number | null; limite: number | null;
+  /** mês com a barra destacada (detalhe aberto) */
+  selecionado?: string | null;
+  onSelect?: (month: string) => void;
+}) {
   const max = Math.max(1, ...serie.map(p => p.total), media ?? 0, limite ?? 0) * 1.12;
   const pct = (v: number) => (v / max) * 100;
 
@@ -32,11 +37,19 @@ export default function CategoryTrendChart({ serie, media, limite }: { serie: Po
           const atual = i === serie.length - 1;
           const estourou = limite !== null && p.total > limite;
           return (
-            <div key={p.month} className="tchart-col" title={`${shortMonth(p.month)}: ${fmtBRL(p.total)}`}>
+            <button
+              key={p.month}
+              type="button"
+              className={`tchart-col ${selecionado === p.month ? 'sel' : ''}`}
+              title={`${shortMonth(p.month)}: ${fmtBRL(p.total)} — clique para ver o detalhe`}
+              onClick={() => onSelect?.(p.month)}
+              disabled={p.total === 0}
+              aria-pressed={selecionado === p.month}
+            >
               <div className={`tchart-bar ${estourou ? 'acima' : ''} ${atual ? 'atual' : ''}`} style={{ height: `${pct(p.total)}%` }}>
                 {p.total > 0 && <span className="tchart-val">{fmtCompacto(p.total)}</span>}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

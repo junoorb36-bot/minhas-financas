@@ -8,6 +8,7 @@ import { useAllMonths, useAllTransactions, useBudgets } from '@/hooks/useFinance
 import { fmtBRL, fmtCompacto } from '@/lib/money';
 import { monthName, shortMonth, todayKey } from '@/lib/months';
 import { EvolucaoCategoria, Tendencia, evolucaoPorCategoria } from '@/lib/trend';
+import { Transaction } from '@/lib/types';
 
 const MESES_NO_GRAFICO = 6;
 const CHAVE_FOCO = 'comparativo-foco';
@@ -56,12 +57,52 @@ function VsLimite({ atual, limite }: { atual: number; limite: number }) {
   );
 }
 
+function DetalheMes({ categoria, month, itens, media, onClose }: {
+  categoria: string; month: string; itens: Transaction[]; media: number | null; onClose: () => void;
+}) {
+  const total = itens.reduce((s, t) => s + Number(t.valor), 0);
+  const dif = media !== null ? total - media : null;
+  const maior = itens.length ? Number(itens[0].valor) : 0;
+  return (
+    <div className="mes-detalhe">
+      <div className="mes-detalhe-head">
+        <div>
+          <strong>{categoria} em {monthName(month).toLowerCase()}</strong>
+          <span>
+            {fmtBRL(total)} em {itens.length} lançamento{itens.length === 1 ? '' : 's'}
+            {dif !== null && Math.abs(dif) >= 0.01 && (
+              <> · <b className={dif > 0 ? 'r' : 'g'}>{fmtBRL(Math.abs(dif))} {dif > 0 ? 'acima' : 'abaixo'} da média</b></>
+            )}
+          </span>
+        </div>
+        <button className="icon-btn" title="Fechar" onClick={onClose}>✕</button>
+      </div>
+      <div className="mes-detalhe-lista">
+        {itens.map(t => (
+          <div className="mes-item" key={t.id}>
+            <span className="mes-item-dia">{t.dia_vencimento ? `dia ${t.dia_vencimento}` : '—'}</span>
+            <span className="mes-item-desc">
+              {t.descricao}
+              {t.parcelas && t.parcelas > 1 && <span className="parcela-tag">{t.parcela}/{t.parcelas}</span>}
+              <span className="badge">{t.type === 'fixo' ? 'Fixo' : 'Variável'}</span>
+              {t.cartao && <span className="badge cartao">💳</span>}
+            </span>
+            <span className="mes-item-barra"><i style={{ width: `${maior ? (Number(t.valor) / maior) * 100 : 0}%` }} /></span>
+            <span className="mes-item-valor">{fmtBRL(Number(t.valor))}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Comparativo() {
   const { month } = useMonth();
   const allTxs = useAllTransactions();
   const allMonths = useAllMonths();
   const budgetsQ = useBudgets(month);
   const [foco, setFoco] = useState<string | null>(null);
+  const [mesSel, setMesSel] = useState<string | null>(null);
 
   useEffect(() => {
     try { setFoco(localStorage.getItem(CHAVE_FOCO)); } catch {}
@@ -76,6 +117,7 @@ export default function Comparativo() {
 
   function escolher(c: string) {
     setFoco(c);
+    setMesSel(null);
     try { localStorage.setItem(CHAVE_FOCO, c); } catch {}
   }
 
@@ -121,13 +163,32 @@ export default function Comparativo() {
                 {monthName(month)} ainda está em andamento: os valores vão crescer até o fim do mês. Para comparar um mês fechado, volte com a seta ‹.
               </div>
             )}
-            <CategoryTrendChart serie={emFoco.serie} media={emFoco.media} limite={limites[emFoco.categoria] ?? null} />
+            <CategoryTrendChart
+              serie={emFoco.serie}
+              media={emFoco.media}
+              limite={limites[emFoco.categoria] ?? null}
+              selecionado={mesSel}
+              onSelect={m => setMesSel(mesSel === m ? null : m)}
+            />
             <div className="legend">
               <span><i className="dot" style={{ background: 'var(--green)' }} />Dentro do limite</span>
               {limites[emFoco.categoria] !== undefined && <span><i className="dot" style={{ background: 'var(--red)' }} />Acima do limite</span>}
               <span><i className="tchart-legend-line media" />Sua média</span>
               {limites[emFoco.categoria] !== undefined && <span><i className="tchart-legend-line limite" />Limite</span>}
+              {!mesSel && <span className="legend-dica">Clique numa barra para ver o que foi gasto naquele mês</span>}
             </div>
+            {mesSel && (
+              <DetalheMes
+                key={`${emFoco.categoria}-${mesSel}`}
+                categoria={emFoco.categoria}
+                month={mesSel}
+                media={emFoco.media}
+                itens={(allTxs.data ?? [])
+                  .filter(t => t.month === mesSel && t.type !== 'entrada' && (t.categoria || 'Outros') === emFoco.categoria)
+                  .sort((a, b) => Number(b.valor) - Number(a.valor))}
+                onClose={() => setMesSel(null)}
+              />
+            )}
           </div>
 
           <div className="section-header" style={{ marginTop: 28 }}>
