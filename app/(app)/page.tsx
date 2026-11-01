@@ -5,6 +5,7 @@ import { useMonth, useToast } from '@/components/Providers';
 import PageHead from '@/components/PageHead';
 import EvolutionChart from '@/components/EvolutionChart';
 import DailySpendCalendar from '@/components/DailySpendCalendar';
+import CompareCard from '@/components/CompareCard';
 import Donut from '@/components/Donut';
 import MonthNote from '@/components/MonthNote';
 import {
@@ -132,21 +133,8 @@ export default function Home() {
           <div className="label">Comparado a {nomeAnterior} <Info texto="Categorias em que você gastou bem menos (melhorou) ou bem mais (piorou) que no mês anterior" /></div>
           {!temAnterior ? (
             <div className="sub">sem mês anterior para comparar</div>
-          ) : variacoes.length === 0 ? (
-            <div className="sub">gastos estáveis em todas as categorias</div>
           ) : (
-            <div className="cmp-pills">
-              {[...variacoes.filter(v => v.status === 'melhorou').slice(0, 3), ...variacoes.filter(v => v.status === 'piorou').slice(0, 2)].map(v => (
-                <Link
-                  key={v.categoria}
-                  href={`/lancamentos?cat=${encodeURIComponent(v.categoria)}`}
-                  className={`orc-pill ${v.status === 'melhorou' ? 'ok' : 'estourou'}`}
-                  title={`${v.categoria}: ${fmtBRL(v.atual)} agora, ${fmtBRL(v.anterior)} em ${nomeAnterior} — gastou ${fmtBRL(Math.abs(v.diferenca))} a ${v.status === 'melhorou' ? 'menos' : 'mais'}`}
-                >
-                  <i />{v.categoria} · <span>{v.status}</span>
-                </Link>
-              ))}
-            </div>
+            <CompareCard variacoes={variacoes} nomeAnterior={nomeAnterior} />
           )}
         </div>
       </div>
