@@ -136,7 +136,7 @@ export default function Home() {
             <div className="sub">gastos estáveis em todas as categorias</div>
           ) : (
             <div className="cmp-pills">
-              {variacoes.slice(0, 4).map(v => (
+              {[...variacoes.filter(v => v.status === 'melhorou').slice(0, 3), ...variacoes.filter(v => v.status === 'piorou').slice(0, 2)].map(v => (
                 <Link
                   key={v.categoria}
                   href={`/lancamentos?cat=${encodeURIComponent(v.categoria)}`}
