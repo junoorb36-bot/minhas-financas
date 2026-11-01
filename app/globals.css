@@ -401,6 +401,36 @@ a.nav-item { text-decoration: none; }
 }
 .cmp-mais:hover { border-color: var(--green); color: var(--text); }
 
+/* aba Comparativo */
+.foco-card { margin-bottom: 8px; }
+.foco-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.foco-head h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+.foco-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.cmp-num { background: var(--bg); border-radius: var(--radius-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+.cmp-num span { font-size: 12px; color: var(--text-muted); }
+.cmp-num strong { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cmp-num strong.g { color: var(--green); } .cmp-num strong.r { color: var(--red); }
+.cmp-num small { font-size: 12px; color: var(--text-subtle); }
+.tend-pill { flex-shrink: 0; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--bg); color: var(--text-muted); white-space: nowrap; }
+.tend-pill.abaixo { background: var(--green-soft); color: var(--green-dark); }
+.tend-pill.acima { background: var(--red-soft); color: var(--red); }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.cat-tile {
+  text-align: left; font-family: inherit; color: var(--text); cursor: pointer;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow);
+  transition: border-color 0.15s;
+}
+.cat-tile:hover { border-color: var(--green); }
+.cat-tile.sel { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.cat-tile-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cat-tile-head strong { font-size: 14px; }
+.cat-tile-head .tend-pill { font-size: 11px; padding: 3px 8px; }
+.cat-tile-valor { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 10px; font-variant-numeric: tabular-nums; }
+.mini-barras { display: flex; align-items: flex-end; gap: 4px; height: 40px; }
+.mini-barras span { flex: 1; background: var(--green); opacity: 0.35; border-radius: 3px 3px 0 0; }
+.mini-barras span.atual { opacity: 1; }
+.cat-tile-sub { font-size: 12px; color: var(--text-subtle); margin-top: 8px; }
+
 /* filtro por categoria (pílulas) */
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .pill {

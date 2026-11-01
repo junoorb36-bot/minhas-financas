@@ -15,6 +15,8 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
   variáveis no cartão, a evolução mês a mês e aceita compras parceladas (cada
   parcela vira um lançamento no seu mês). Com fechamento e vencimento configurados,
   a data da compra decide em qual fatura ela entra
+- **Comparativo por categoria**: acompanhe mês a mês se cada categoria está abaixo
+  ou acima da sua média, com gráfico, média e limite do orçamento
 - **Orçamento por categoria**: defina limites mensais; na Visão geral cada
   categoria aparece como *tranquilo*, *atenção* ou *estourou*
 - **Mês automático**: todo dia 1º o mês novo é criado sozinho, copiando custos
