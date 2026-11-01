@@ -391,6 +391,8 @@ a.nav-item { text-decoration: none; }
 .orc-pill.alerta { background: var(--amber-soft); color: var(--amber); }
 .orc-pill.estourou { background: var(--red-soft); color: var(--red); }
 
+.cmp-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+
 /* filtro por categoria (pílulas) */
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .pill {

@@ -5,7 +5,7 @@ própria cópia, com banco de dados próprio — seus dados são só seus.
 
 ## Funcionalidades
 
-- **Visão geral do mês**: resultado, receitas, despesas e saldo em conta;
+- **Visão geral do mês**: resultado, receitas, despesas e um **comparativo com o mês anterior** (onde melhorou e onde piorou);
   calendário de **saídas por dia**; gastos por categoria (clique numa categoria
   para ver os lançamentos dela); evolução mês a mês e comparativo fixos × variáveis
 - **Lançamentos**: entradas, custos fixos e variáveis com status pago/pendente,

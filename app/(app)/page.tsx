@@ -14,8 +14,9 @@ import { iniciarMes as iniciarMesAction } from '@/lib/actions';
 import { ROTULO_STATUS, situacaoOrcamento } from '@/lib/budget';
 import { saidasPorDia } from '@/lib/daily';
 import { fmtBRL } from '@/lib/money';
-import { monthName } from '@/lib/months';
-import { gastosPorCategoria, monthTotals, saldoAcumulado } from '@/lib/totals';
+import { monthName, shiftMonth } from '@/lib/months';
+import { compararCategorias } from '@/lib/compare';
+import { gastosPorCategoria, monthTotals } from '@/lib/totals';
 
 function greeting() {
   const h = new Date().getHours();
@@ -73,7 +74,13 @@ export default function Home() {
     );
   }
 
-  const saldoConta = saldoAcumulado((allMonths.data ?? []).map(m => m.month), allTxs.data ?? [], month);
+  // comparação por categoria com o mês anterior (só se ele foi iniciado)
+  const mesAnterior = shiftMonth(month, -1);
+  const temAnterior = (allMonths.data ?? []).some(m => m.month === mesAnterior);
+  const variacoes = temAnterior
+    ? compararCategorias(gastosPorCategoria(txs), gastosPorCategoria((allTxs.data ?? []).filter(x => x.month === mesAnterior)))
+    : [];
+  const nomeAnterior = monthName(mesAnterior).toLowerCase().split(' ')[0];
 
   const diario = saidasPorDia(txs, month);
 
@@ -122,8 +129,25 @@ export default function Home() {
           <div className="value red">{fmtBRL(t.saidas)}</div>
         </div>
         <div className="card">
-          <div className="label">Saldo em conta <Info texto="Soma dos resultados de todos os meses até este (considera tudo como pago e recebido)" /></div>
-          <div className="value" style={saldoConta < 0 ? { color: 'var(--red)' } : undefined}>{fmtBRL(saldoConta)}</div>
+          <div className="label">Comparado a {nomeAnterior} <Info texto="Categorias em que você gastou bem menos (melhorou) ou bem mais (piorou) que no mês anterior" /></div>
+          {!temAnterior ? (
+            <div className="sub">sem mês anterior para comparar</div>
+          ) : variacoes.length === 0 ? (
+            <div className="sub">gastos estáveis em todas as categorias</div>
+          ) : (
+            <div className="cmp-pills">
+              {variacoes.slice(0, 4).map(v => (
+                <Link
+                  key={v.categoria}
+                  href={`/lancamentos?cat=${encodeURIComponent(v.categoria)}`}
+                  className={`orc-pill ${v.status === 'melhorou' ? 'ok' : 'estourou'}`}
+                  title={`${v.categoria}: ${fmtBRL(v.atual)} agora, ${fmtBRL(v.anterior)} em ${nomeAnterior} — gastou ${fmtBRL(Math.abs(v.diferenca))} a ${v.status === 'melhorou' ? 'menos' : 'mais'}`}
+                >
+                  <i />{v.categoria} · <span>{v.status}</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
